@@ -8,7 +8,7 @@ This plugin uses moment.js. It's a time manipulation library that is already inc
 
 ## Clock
 
-- Option to change the date format. Recommended time formats: `HH:MM:ss` and `hh:mm A`.
+- Option to change the date format. Recommended: `HH:MM:ss` and `hh:mm A`.
 - Option to change update interval.
 - Option to use UTC timezone.
 
@@ -16,4 +16,4 @@ This plugin uses moment.js. It's a time manipulation library that is already inc
 
 - Have a key that records the time when you last modified a file.
 - Supports nesting.
-- Option to change the date format. Recommended time format: `YYYY-MM-DD[T]HH:mm:ss.SSSZ`.
+- Option to change the date format. Recommended: `YYYY-MM-DD[T]HH:mm:ss.SSSZ`.
