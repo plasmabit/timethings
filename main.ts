@@ -3,7 +3,7 @@ import { moment } from "obsidian";
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
+interface TimeThingsSettings {
 	clockFormat: string;
 	isUTC: boolean;
 	updateIntervalMilliseconds: string;
@@ -13,7 +13,7 @@ interface MyPluginSettings {
 	enableModifiedKeyUpdate: boolean;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: TimeThingsSettings = {
 	clockFormat: 'HH:mm:ss',
 	updateIntervalMilliseconds: '1000',
 	isUTC: false,
@@ -23,8 +23,8 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	enableModifiedKeyUpdate: true
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class TimeThings extends Plugin {
+	settings: TimeThingsSettings;
 	statusBar: HTMLElement;    // # Required
 	isProccessing = false;
 
@@ -40,12 +40,13 @@ export default class MyPlugin extends Plugin {
 
 			// # Change status bar text every second
 			this.updateStatusBar();
-			setInterval(this.updateStatusBar.bind(this), +this.settings.updateIntervalMilliseconds);
+			this.registerInterval(
+				window.setInterval(this.updateStatusBar.bind(this), +this.settings.updateIntervalMilliseconds)
+			);
 		}
 
 		// # On file modification
 		this.registerEvent(this.app.vault.on('modify', (file) => {
-			console.log('File has been modified.');
 			if (this.settings.enableModifiedKeyUpdate)
 			{
 				this.updateModifiedKey(file);
@@ -54,15 +55,6 @@ export default class MyPlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 	// # The actual function
 	updateStatusBar() {
@@ -149,26 +141,12 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: TimeThings
+;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: TimeThings
+	) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -208,7 +186,7 @@ class SampleSettingTab extends PluginSettingTab {
 			.setName('Date format')
 			.setDesc(createLink())
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
+				.setPlaceholder('hh:mm A')
 				.setValue(this.plugin.settings.clockFormat)
 				.onChange(async (value) => {
 					this.plugin.settings.clockFormat = value;
@@ -219,7 +197,7 @@ class SampleSettingTab extends PluginSettingTab {
 			.setName('Update interval')
 			.setDesc('In milliseconds. Restart plugin for this setting to take effect.')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
+				.setPlaceholder('1000')
 				.setValue(this.plugin.settings.updateIntervalMilliseconds)
 				.onChange(async (value) => {
 					this.plugin.settings.updateIntervalMilliseconds = value;
