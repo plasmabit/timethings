@@ -54,7 +54,7 @@ export default class TimeThings extends Plugin {
 		}))
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new TimeThingsSettingsTab(this.app, this));
 	}
 	// # The actual function
 	updateStatusBar() {
@@ -141,7 +141,7 @@ export default class TimeThings extends Plugin {
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
+class TimeThingsSettingsTab extends PluginSettingTab {
 	plugin: TimeThings
 ;
 
