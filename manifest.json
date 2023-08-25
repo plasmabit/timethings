@@ -5,7 +5,6 @@
 	"minAppVersion": "0.15.0",
 	"description": "Show clock on the status bar. Sync frontmatter with the time the file was modified.",
 	"author": "Nick Winters",
-	"authorUrl": "",
-	"fundingUrl": {},
+	"authorUrl": "https://github.com/DynamicPlayerSector",
 	"isDesktopOnly": true
 }
