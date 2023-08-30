@@ -117,16 +117,15 @@ export default class TimeThings extends Plugin {
 	getClockEmojiForHour(time: moment.Moment): string {
 		const hour = time.hour();
 		const hour12 = (hour % 12) || 12;
-		const clockEmojis = [
-		  '🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚'
-		];
-	  
-		if (hour12 >= 0 && hour12 <= 11) {
-		  return clockEmojis[hour12];
-		} else {
-		  return '⏰'; // Default emoji for unknown hours
-		}
+
+		const clockEmojiMapping = {
+			1: '🕐', 2: '🕑', 3: '🕒', 4: '🕓', 5: '🕔', 6: '🕕',
+			7: '🕖', 8: '🕗', 9: '🕘', 10: '🕙', 11: '🕚', 12: '🕛'
+		};
+
+		return clockEmojiMapping[hour12] || '⏰'; // Default emoji for unknown hours
 	}
+	
 
 	onunload() {
 
@@ -169,7 +168,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 		}
 
 		containerEl.createEl('h1', { text: 'Status bar' });
-		containerEl.createEl('p', { text: 'Displays clock in the status bar' });
+		containerEl.createEl('p', { text: 'Displays clock in the status bar.' });
 
 		new Setting(containerEl)
 			.setName('Enable status bar clock')
