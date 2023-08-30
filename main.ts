@@ -168,7 +168,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 			return linkEl;
 		}
 
-		containerEl.createEl('h1', { text: 'Status Bar' });
+		containerEl.createEl('h1', { text: 'Status bar' });
 		containerEl.createEl('p', { text: 'Displays clock in the status bar' });
 
 		new Setting(containerEl)
@@ -216,8 +216,8 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 					}),);
 
 		containerEl.createEl('h1', { text: 'Frontmatter' });
-		containerEl.createEl('p', { text: 'Handles timestamp keys in frontmatter' });
-		containerEl.createEl('h2', { text: 'Modified Key' });
+		containerEl.createEl('p', { text: 'Handles timestamp keys in frontmatter.' });
+		containerEl.createEl('h2', { text: 'Modified key' });
 
 		new Setting(containerEl)
 			.setName('Enable update of the modified key')
@@ -234,7 +234,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 		.setName('Modified key name')
 		.setDesc('Supports nested keys. For example `timethings.updated_at`')
 		.addText(text => text
-			.setPlaceholder('Enter your secret')
+			.setPlaceholder('updated_at')
 			.setValue(this.plugin.settings.modifiedKeyName)
 			.onChange(async (value) => {
 				this.plugin.settings.modifiedKeyName = value;
@@ -245,7 +245,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 		.setName('Modified key format')
 		.setDesc(createLink())
 		.addText(text => text
-			.setPlaceholder('Enter your secret')
+			.setPlaceholder('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
 			.setValue(this.plugin.settings.modifiedKeyFormat)
 			.onChange(async (value) => {
 				this.plugin.settings.modifiedKeyFormat = value;
