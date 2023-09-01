@@ -24,5 +24,5 @@ This plugin uses moment.js. It's a time manipulation library that is already inc
 
 Custom frontmatter handling solution is disabled by default since Obsidian's straightforward frontmatter API is much more stable and robust. However, advanced users may enable it if they wish. Don't forget to regularly back up your vault.
 
-- Using custom frontmatter handling solution with a nested key may result in the wrong key being updated. This only happens if it comes before the needed key in the frontmatter and has a similar path. For example `x.y.z` will update `x.y.g.z` instead if it meets it first and it has a value of a format specified in the settings.
+- Using custom frontmatter handling solution with a nested key may result in the wrong key being updated. This only happens if it comes before the needed key in the frontmatter and has a similar path. For example `x.y.z` will update `x.y.g.z` instead if it meets it first and if it has a value of a format specified in the settings.
 - Using custom frontmatter handling solution works best with templates since it doesn't create a key for you if it doesn't already exists. Also it doesn't update null values or the values of the format different from the one specified in the settings.
