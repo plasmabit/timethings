@@ -14,7 +14,7 @@ This plugin uses moment.js. It's a time manipulation library that is already inc
 
 ## Frontmatter
 
-![Obsidian_pz12kyYdep](https://github.com/DynamicPlayerSector/timethings/assets/65742767/661884e4-666b-4793-9a46-de12edb831ed)
+<img src="https://github.com/DynamicPlayerSector/timethings/assets/65742767/661884e4-666b-4793-9a46-de12edb831ed"  height="800">
 
 - Have a key that records the time when you last modified a file.
 - Supports nesting.
