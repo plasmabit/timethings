@@ -37,7 +37,7 @@ export default class TimeThings extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		this.isDB = true;    // for debugging purposes
+		this.isDB = false;    // for debugging purposes
 
 		if (this.settings.enableClock)
 		{
