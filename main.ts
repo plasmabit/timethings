@@ -11,6 +11,8 @@ interface TimeThingsSettings {
 	modifiedKeyFormat: string;
 	enableClock: boolean;
 	enableModifiedKeyUpdate: boolean;
+	useCustomFrontmatterHandlingSolution: boolean;
+	updateIntervalFrontmatterMinutes: number;
 }
 
 const DEFAULT_SETTINGS: TimeThingsSettings = {
@@ -20,17 +22,22 @@ const DEFAULT_SETTINGS: TimeThingsSettings = {
 	modifiedKeyName: 'updated_at',
 	modifiedKeyFormat: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
 	enableClock: true,
-	enableModifiedKeyUpdate: true
+	enableModifiedKeyUpdate: true,
+	useCustomFrontmatterHandlingSolution: false,
+	updateIntervalFrontmatterMinutes: 1
 }
 
 export default class TimeThings extends Plugin {
 	settings: TimeThingsSettings;
+	isDB: boolean;
 	statusBar: HTMLElement;    // # Required
+	debugBar: HTMLElement;
 	isProccessing = false;
 
 	async onload() {
 		await this.loadSettings();
 
+		this.isDB = false;    // for debugging purposes
 
 		if (this.settings.enableClock)
 		{
@@ -45,18 +52,42 @@ export default class TimeThings extends Plugin {
 			);
 		}
 
+		if (this.isDB) {
+			this.debugBar = this.addStatusBarItem();
+			this.debugBar.setText("Time Things Debug Build")
+		}
+
 		// # On file modification
 		this.registerEvent(this.app.vault.on('modify', (file) => {
+			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
+				return;
+			}
 			if (this.settings.enableModifiedKeyUpdate)
 			{
-				this.updateModifiedKey(file);
+				this.objectUpdateModifiedKey(file);
+
 			}
 		}))
+
+		this.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
+			if (this.settings.useCustomFrontmatterHandlingSolution === false) {
+				return;
+			}
+			const dateNow = moment();
+			const dateFormatted = dateNow.format(this.settings.modifiedKeyFormat);
+			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (activeView === null) {
+				return;
+			}
+			const editor: Editor = activeView.editor;
+
+			this.editorUpdateKey(editor, this.settings.modifiedKeyName, dateFormatted);
+		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new TimeThingsSettingsTab(this.app, this));
 	}
-	// # The actual function
+	
 	updateStatusBar() {
 		const dateNow = moment();
 		const dateUTC = moment.utc();    // Convert to UTC time
@@ -67,39 +98,143 @@ export default class TimeThings extends Plugin {
 
 		this.statusBar.setText(emoji + " " + dateFormatted);
 	}
+	
+	isFrontmatterPresent(editor: Editor): boolean {
+		if (editor.getLine(0) !== "---") {
+			return false;
+		}
+		for (let i = 1; i <= editor.lastLine(); i++) {
+			if (editor.getLine(i) === "---") {
+				return true;
+			}
+		}
+		return false;
+	}
 
-	async updateModifiedKey(file: TAbstractFile) {
+	frontmatterEndLine(editor: Editor): number | undefined {
+		if (this.isFrontmatterPresent(editor)) {
+			for (let i = 1; i <= editor.lastLine(); i++) {
+				if (editor.getLine(i) === "---") {
+					return i;
+				}
+			}
+		}
+		return undefined; // # End line not found
+	}
+
+	editorUpdateKey(editor: Editor, fieldPath: string, fieldValue: string) {
+		const fieldLine = this.getFieldLine(editor, fieldPath);
+		if (fieldLine === undefined) {
+			return;
+		}
+		const value = editor.getLine(fieldLine).split(/:(.*)/s)[1].trim();
+		if (moment(value, this.settings.modifiedKeyFormat, true).isValid() === false) {    // Little safecheck in place to reduce chance of bugs
+			this.isDB && console.log("not valid date");
+			this.isDB && console.log(fieldLine);
+			return;
+		}
+		const initialLine = editor.getLine(fieldLine).split(':', 1);
+		const newLine = initialLine[0] + ": " + fieldValue;
+		editor.setLine(fieldLine, newLine);
+
+	}
+
+	getFieldLine(editor: Editor, fieldPath: string): number | undefined {
+		const frontmatterEndLine = this.frontmatterEndLine(editor);
+		const keys = fieldPath.split('.');
+		const depth = keys.length;
+
+		if (frontmatterEndLine === undefined) {
+			return undefined;
+		}
+
+		let targetDepth = 1;
+		let currentDepth = 1;
+		let startLine = 1;
+		let emergingPath = [];
+
+		for (const key of keys) {
+			for (let i = startLine; i <= frontmatterEndLine; i++) {
+
+				const currentLine = editor.getLine(i);
+				const currentField = currentLine.split(':');
+				const currentFieldName = currentField[0].trim();
+
+				if (currentFieldName === key) {
+					emergingPath.push(currentFieldName);
+					this.isDB && console.log(emergingPath);
+					let targetPath = fieldPath.split('.');
+					let targetPathShrink = targetPath.slice(0, emergingPath.length);
+					if (targetPathShrink.join('.') === emergingPath.join('.') === false) {
+						this.isDB && console.log("Path wrong: " + emergingPath + " | " + targetPathShrink);
+						emergingPath.pop();
+						startLine = i + 1;
+						continue;
+					}
+					else {
+						if (emergingPath.join('.') === fieldPath) {
+							if (targetDepth > 1) {
+								if (this.isLineIndented(currentLine) === false) {    // met first level variable, obviously return
+									this.isDB && console.log("Not indented: " + i + " | " + currentLine + " | " + startLine)
+									return undefined;
+								}
+							}
+							else {
+								if (this.isLineIndented(currentLine)) {
+									startLine = i + 1;
+									emergingPath = [];
+									continue;
+								}
+							}
+							return i;
+						}
+						startLine = i + 1;
+						targetDepth += 1;
+						continue;
+					}
+				}
+			}
+		}
+
+		return undefined;
+	}
+
+	isLineIndented(line: string): boolean {
+		return /^[\s\t]/.test(line);
+	}
+
+	async objectUpdateModifiedKey(file: TAbstractFile) {
 
 		await this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
 			const dateNow = moment();
 			const dateFormatted = dateNow.format(this.settings.modifiedKeyFormat);
 
-			const updateKeyValue = moment(this.getNestedValue(frontmatter, this.settings.modifiedKeyName), this.settings.modifiedKeyFormat);
+			const updateKeyValue = moment(this.objectGetValue(frontmatter, this.settings.modifiedKeyName), this.settings.modifiedKeyFormat);
 			
 			if (updateKeyValue.add(1, 'minutes') > dateNow)
 			{
 				return;
 			}
 			
-			this.setNestedValue(frontmatter, this.settings.modifiedKeyName, dateFormatted);
+			this.objectSetValue(frontmatter, this.settings.modifiedKeyName, dateFormatted);
 		})
 	}
 
-	getNestedValue(obj: any, path: string) {
-		const keys = path.split('.');
+	objectGetValue(obj: any, fieldPath: string) {
+		const keys = fieldPath.split('.');
 		let value = obj;
 	  
 		for (const key of keys) {
 		  value = value[key];
 		  if (value === undefined) {
-			return undefined; // If any key is not found, return undefined
+			return undefined;
 		  }
 		}
 	
 		return value;
 	}
 
-	setNestedValue(obj: any, path: string, value: string) {
+	objectSetValue(obj: any, path: string, value: string) {
 		const keys = path.split('.');
 		let currentLevel = obj;
 	  
@@ -166,6 +301,17 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 			)
 			return linkEl;
 		}
+
+		new Setting(containerEl)
+			.setName('Use custom frontmatter handling solution')
+			.setDesc('Smoother experiene. Prone to bugs if you use a nested value.')
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.useCustomFrontmatterHandlingSolution)
+					.onChange(async (newValue) => {
+						this.plugin.settings.useCustomFrontmatterHandlingSolution = newValue;
+						await this.plugin.saveSettings();
+				}),);
 
 		containerEl.createEl('h1', { text: 'Status bar' });
 		containerEl.createEl('p', { text: 'Displays clock in the status bar.' });
@@ -250,6 +396,20 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 				this.plugin.settings.modifiedKeyFormat = value;
 				await this.plugin.saveSettings();
 			}));
+		
+		new Setting(containerEl)
+		.setName('Interval between updates')
+		.setDesc('Only for Obsidian frontmatter API.')
+		.addSlider((slider) =>
+			slider
+				.setLimits(1, 15, 1)
+				.setValue(this.plugin.settings.updateIntervalFrontmatterMinutes)
+				.onChange(async (value) => {
+					this.plugin.settings.updateIntervalFrontmatterMinutes = value;
+					await this.plugin.saveSettings();
+		  })
+		.setDynamicTooltip(),
+		);
 	}
 	
 }
