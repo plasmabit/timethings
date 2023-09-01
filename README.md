@@ -1,6 +1,7 @@
 # Time Things
 
 Show clock in status bar. Sync modified file property with frontmatter.
+
 This plugin uses moment.js. It's a time manipulation library that is already included in Obsidian.
 
 ## Clock
