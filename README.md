@@ -41,3 +41,5 @@ I may improve it further in the future, but for that I feel like I'd have to wri
 
 - [ ] Ignore files in specified folders
 - [ ] Ingore files with specified frontmatter keys (and their values)
+- [ ] Pick a timezone for all things globally
+- [ ] Pick a timezone for clock and frontmatter seperately
