@@ -1,9 +1,9 @@
 {
 	"id": "timethings",
 	"name": "Time Things",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"minAppVersion": "0.15.0",
-	"description": "Show clock on the status bar. Sync frontmatter with the time the file was modified.",
+	"description": "Show clock in the corner. Track total editing time of a note and the last time it was modified.",
 	"author": "Nick Winters",
 	"authorUrl": "https://github.com/DynamicPlayerSector",
 	"isDesktopOnly": true
