@@ -400,6 +400,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 					.onChange(async (newValue) => {
 						this.plugin.settings.useCustomFrontmatterHandlingSolution = newValue;
 						await this.plugin.saveSettings();
+						await this.display();
 				}),);
 
 		containerEl.createEl('h1', { text: 'Status bar' });
@@ -414,40 +415,46 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 					.onChange(async (newValue) => {
 						this.plugin.settings.enableClock = newValue;
 						await this.plugin.saveSettings();
+						await this.display();
 				}),);
 
-		new Setting(containerEl)
-			.setName('Date format')
-			.setDesc(createLink())
-			.addText(text => text
-				.setPlaceholder('hh:mm A')
-				.setValue(this.plugin.settings.clockFormat)
-				.onChange(async (value) => {
-					this.plugin.settings.clockFormat = value;
-					await this.plugin.saveSettings();
-				}));
-		
-		new Setting(containerEl)
-			.setName('Update interval')
-			.setDesc('In milliseconds. Restart plugin for this setting to take effect.')
-			.addText(text => text
-				.setPlaceholder('1000')
-				.setValue(this.plugin.settings.updateIntervalMilliseconds)
-				.onChange(async (value) => {
-					this.plugin.settings.updateIntervalMilliseconds = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName('UTC timezone')
-			.setDesc('Use UTC instead of local time?')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.isUTC)
-					.onChange(async (newValue) => {
-						this.plugin.settings.isUTC = newValue;
+		if (this.plugin.settings.enableClock === true) {
+			
+			new Setting(containerEl)
+				.setName('Date format')
+				.setDesc(createLink())
+				.addText(text => text
+					.setPlaceholder('hh:mm A')
+					.setValue(this.plugin.settings.clockFormat)
+					.onChange(async (value) => {
+						this.plugin.settings.clockFormat = value;
 						await this.plugin.saveSettings();
-					}),);
+					}));
+			
+			new Setting(containerEl)
+				.setName('Update interval')
+				.setDesc('In milliseconds. Restart plugin for this setting to take effect.')
+				.addText(text => text
+					.setPlaceholder('1000')
+					.setValue(this.plugin.settings.updateIntervalMilliseconds)
+					.onChange(async (value) => {
+						this.plugin.settings.updateIntervalMilliseconds = value;
+						await this.plugin.saveSettings();
+					}));
+	
+			new Setting(containerEl)
+				.setName('UTC timezone')
+				.setDesc('Use UTC instead of local time?')
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.isUTC)
+						.onChange(async (newValue) => {
+							this.plugin.settings.isUTC = newValue;
+							await this.plugin.saveSettings();
+						}),);
+
+		}
+
 
 		containerEl.createEl('h1', { text: 'Frontmatter' });
 		containerEl.createEl('p', { text: 'Handles timestamp keys in frontmatter.' });
@@ -462,43 +469,55 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 					.onChange(async (newValue) => {
 						this.plugin.settings.enableModifiedKeyUpdate = newValue;
 						await this.plugin.saveSettings();
+						await this.display();
 					}),);
 
-		new Setting(containerEl)
-		.setName('Modified key name')
-		.setDesc('Supports nested keys. For example `timethings.updated_at`')
-		.addText(text => text
-			.setPlaceholder('updated_at')
-			.setValue(this.plugin.settings.modifiedKeyName)
-			.onChange(async (value) => {
-				this.plugin.settings.modifiedKeyName = value;
-				await this.plugin.saveSettings();
-			}));
+		if (this.plugin.settings.enableModifiedKeyUpdate === true) {
 
-		new Setting(containerEl)
-		.setName('Modified key format')
-		.setDesc(createLink())
-		.addText(text => text
-			.setPlaceholder('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
-			.setValue(this.plugin.settings.modifiedKeyFormat)
-			.onChange(async (value) => {
-				this.plugin.settings.modifiedKeyFormat = value;
-				await this.plugin.saveSettings();
-			}));
-		
-		new Setting(containerEl)
-		.setName('Interval between updates')
-		.setDesc('Only for Obsidian frontmatter API.')
-		.addSlider((slider) =>
-			slider
-				.setLimits(1, 15, 1)
-				.setValue(this.plugin.settings.updateIntervalFrontmatterMinutes)
+			new Setting(containerEl)
+			.setName('Modified key name')
+			.setDesc('Supports nested keys. For example `timethings.updated_at`')
+			.addText(text => text
+				.setPlaceholder('updated_at')
+				.setValue(this.plugin.settings.modifiedKeyName)
 				.onChange(async (value) => {
-					this.plugin.settings.updateIntervalFrontmatterMinutes = value;
+					this.plugin.settings.modifiedKeyName = value;
 					await this.plugin.saveSettings();
-		  })
-		.setDynamicTooltip(),
-		);
+				}));
+	
+			new Setting(containerEl)
+			.setName('Modified key format')
+			.setDesc(createLink())
+			.addText(text => text
+				.setPlaceholder('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
+				.setValue(this.plugin.settings.modifiedKeyFormat)
+				.onChange(async (value) => {
+					this.plugin.settings.modifiedKeyFormat = value;
+					await this.plugin.saveSettings();
+				}));
+
+			if (this.plugin.settings.useCustomFrontmatterHandlingSolution === false) {
+
+				new Setting(containerEl)
+				.setName('Interval between updates')
+				.setDesc('Only for Obsidian frontmatter API.')
+				.addSlider((slider) =>
+					slider
+						.setLimits(1, 15, 1)
+						.setValue(this.plugin.settings.updateIntervalFrontmatterMinutes)
+						.onChange(async (value) => {
+							this.plugin.settings.updateIntervalFrontmatterMinutes = value;
+							await this.plugin.saveSettings();
+				  })
+				.setDynamicTooltip(),
+				);
+
+			}
+			
+
+
+		}
+
 
 		containerEl.createEl('h2', { text: 'Edit duration key' });
 		containerEl.createEl('p', { text: 'Track for how long you have been editing a note.' });
@@ -512,18 +531,25 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 					.onChange(async (newValue) => {
 						this.plugin.settings.enableEditDurationKey = newValue;
 						await this.plugin.saveSettings();
+						await this.display();
 					}),);
 
-		new Setting(containerEl)
-		.setName('Edit duration key name')
-		.setDesc('Supports nested keys. For example `timethings.edited_seconds`')
-		.addText(text => text
-			.setPlaceholder('edited_seconds')
-			.setValue(this.plugin.settings.editDurationPath)
-			.onChange(async (value) => {
-				this.plugin.settings.editDurationPath = value;
-				await this.plugin.saveSettings();
-			}));
+		if (this.plugin.settings.enableEditDurationKey === true) {
+
+			new Setting(containerEl)
+			.setName('Edit duration key name')
+			.setDesc('Supports nested keys. For example `timethings.edited_seconds`')
+			.addText(text => text
+				.setPlaceholder('edited_seconds')
+				.setValue(this.plugin.settings.editDurationPath)
+				.onChange(async (value) => {
+					this.plugin.settings.editDurationPath = value;
+					await this.plugin.saveSettings();
+				}));
+
+
+		}
+		
 	}
 	
 }
