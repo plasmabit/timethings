@@ -15,6 +15,7 @@ interface TimeThingsSettings {
 	updateIntervalFrontmatterMinutes: number;
 	editDurationPath: string,
 	enableEditDurationKey: boolean,
+	nonTypingEditingTimePercentage: number,
 }
 
 const DEFAULT_SETTINGS: TimeThingsSettings = {
@@ -29,6 +30,7 @@ const DEFAULT_SETTINGS: TimeThingsSettings = {
 	updateIntervalFrontmatterMinutes: 1,
 	editDurationPath: "edited_seconds",
 	enableEditDurationKey: true,
+	nonTypingEditingTimePercentage: 22,
 }
 
 export default class TimeThings extends Plugin {
@@ -201,7 +203,7 @@ export default class TimeThings extends Plugin {
 		const value = editor.getLine(fieldLine).split(/:(.*)/s)[1].trim();
 		const newValue = +value + 1;
 		this.editorUpdateKey(editor, this.settings.editDurationPath, newValue.toString());
-		await sleep(780);
+		await sleep(1000 - (this.settings.nonTypingEditingTimePercentage * 10));
 		this.allowEditDurationUpdate = true;
 	}
 
@@ -216,7 +218,7 @@ export default class TimeThings extends Plugin {
 
 			this.standardSetValue(frontmatter, this.settings.editDurationPath, newValue);
 		})
-		await sleep(10000);
+		await sleep(10000 - (this.settings.nonTypingEditingTimePercentage * 100));
 		this.allowEditDurationUpdate = true;
 	}
 	
@@ -496,7 +498,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 						.onChange(async (newValue) => {
 							this.plugin.settings.isUTC = newValue;
 							await this.plugin.saveSettings();
-						}),);
+				}),);
 
 		}
 
@@ -515,7 +517,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 						this.plugin.settings.enableModifiedKeyUpdate = newValue;
 						await this.plugin.saveSettings();
 						await this.display();
-					}),);
+			}),);
 
 		if (this.plugin.settings.enableModifiedKeyUpdate === true) {
 
@@ -528,7 +530,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.modifiedKeyName = value;
 					await this.plugin.saveSettings();
-				}));
+			}));
 	
 			new Setting(containerEl)
 			.setName('Modified key format')
@@ -539,7 +541,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.modifiedKeyFormat = value;
 					await this.plugin.saveSettings();
-				}));
+			}));
 
 			if (this.plugin.settings.useCustomFrontmatterHandlingSolution === false) {
 
@@ -574,7 +576,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 						await this.display();
 						// await this.plugin.editDurationBar.toggle(this.plugin.settings.enableEditDurationKey);
-					}),);
+		}),);
 
 		if (this.plugin.settings.enableEditDurationKey === true) {
 
@@ -587,8 +589,30 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.editDurationPath = value;
 					await this.plugin.saveSettings();
-				}));
+			}));
 
+			const descA = document.createDocumentFragment();
+			descA.append(
+				'The portion of time you are not typing when editing a note. Works best with custom frontmatter handling solution. ',
+				createEl("a", {
+					href: "https://github.com/DynamicPlayerSector/timethings/wiki/Calculating-your-non%E2%80%90typing-editing-percentage",
+					text: "How to calculate yours?",
+				}),
+			)
+
+			new Setting(containerEl)
+			.setName('Non-typing editing time percentage')
+			.setDesc(descA)
+			.addSlider((slider) =>
+				slider
+					.setLimits(0, 40, 2)
+					.setValue(this.plugin.settings.nonTypingEditingTimePercentage)
+					.onChange(async (value) => {
+						this.plugin.settings.nonTypingEditingTimePercentage = value;
+						await this.plugin.saveSettings();
+					})
+			.setDynamicTooltip(),
+			);
 
 		}
 		
