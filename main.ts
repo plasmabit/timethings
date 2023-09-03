@@ -81,7 +81,7 @@ export default class TimeThings extends Plugin {
 			}
 			if (this.settings.enableEditDurationKey) {
 				this.allowEditDurationUpdate && this.objectUpdateEditDuration(file);
-				this.setEditDurationBar(editor);
+				this.setEditDurationBar(false, file);
 			}
 			if (this.settings.enableModifiedKeyUpdate)
 			{
@@ -104,46 +104,58 @@ export default class TimeThings extends Plugin {
 			this.editorUpdateKey(editor, this.settings.modifiedKeyName, dateFormatted);
 			if (this.settings.enableEditDurationKey) {
 				this.allowEditDurationUpdate && this.updateEditDuration(editor);
-				this.setEditDurationBar(editor);
+				this.setEditDurationBar(true, editor);
 			}
-			
 		});
 
-		this.app.workspace.on("active-leaf-change", () => {
-			this.settings.enableEditDurationKey && this.setEditDurationBar();
-		})
+		this.registerEvent(this.app.workspace.on("active-leaf-change", (file) => {
+			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (activeView === null) {
+				return;
+			}
+			const editor = activeView.editor;
+			this.settings.enableEditDurationKey && this.settings.useCustomFrontmatterHandlingSolution && this.setEditDurationBar(true, editor);
+		}))
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new TimeThingsSettingsTab(this.app, this));
 	}
 
-	setEditDurationBar(editor: Editor) {
-		const fieldLine = this.getFieldLine(editor, this.settings.editDurationPath);
-		if (fieldLine === undefined) {
-			this.editDurationBar.setText("⌛ --");
-			return;
+	setEditDurationBar(useCustomSolution: false, solution: TAbstractFile): void;
+	setEditDurationBar(useCustomSolution: true, solution: Editor): void;
+	async setEditDurationBar(useCustomSolution: boolean, solution: Editor | TAbstractFile) {
+		let value = 0;
+		if (solution instanceof Editor) {
+			let editor = solution;
+			const fieldLine = this.getFieldLine(editor, this.settings.editDurationPath);
+			if (fieldLine === undefined) {
+				this.editDurationBar.setText("⌛ --");
+				return;
+			}
+			value = +editor.getLine(fieldLine).split(/:(.*)/s)[1].trim();
 		}
-		const value = editor.getLine(fieldLine).split(/:(.*)/s)[1].trim();
+		if (solution instanceof TAbstractFile) {
+			let file = solution;
+			await this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
+				value = this.objectGetValue(frontmatter, this.settings.editDurationPath);
+				if (value === undefined) {
+					value = 0;
+				}
+			})
+		}
+		let text = "";
 		if (+value < 60) {
-			this.editDurationBar.setText("⌛ <1 m");
-			return;
+			text = `⌛ <1 m`;
 		}
-		if (+value * 60 >= 1 && +value < 60 * 60 * 24) {
+		else if (+value < 60 * 60 * 24) {
 			const minutes = Math.floor(+value / 60);
-			let text = "";
-			text = "⌛ " + minutes.toString() + " m";
-
-			this.editDurationBar.setText(text);
-			return;
+			text = `⌛ ${minutes} m`;
 		}
-		if (+value * 60 * 60 >= 24) {    // I know that the code of this plugin is spaghetti, I'll refactor everything later
+		else {
 			const days = Math.floor(+value / (24 * 60 * 60));
-			let text = "";
-			text = "⌛ " + days.toString() + " d";
-
-			this.editDurationBar.setText(text);
-			return;
+			text = `⌛ ${days} d`;
 		}
+		this.editDurationBar.setText(text);
 	}
 
 	async updateEditDuration(editor: Editor) {
