@@ -43,11 +43,89 @@ export default class TimeThings extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		// Variables initialization
 		this.isDebugBuild = false;    // for debugging purposes
 		this.allowEditDurationUpdate = true;
 
-		if (this.settings.enableClock)
-		{
+		this.setUpStatusBarItems();
+
+		// Events initialization
+		this.registerFileModificationEvent();
+		this.registerKeyDownDOMEvent();
+		this.registerLeafChangeEvent();
+		this.registerMouseDownDOMEvent();
+		
+		this.addSettingTab(new TimeThingsSettingsTab(this.app, this));
+	}
+
+	registerMouseDownDOMEvent() {
+		this.registerDomEvent(document, 'mousedown', (evt: MouseEvent) => {
+			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView === null) {
+					return;
+				}
+			const editor: Editor = activeView.editor;
+			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
+				if (this.settings.enableEditDurationKey) {
+					this.setEditDurationBar(true, editor);
+				}
+			}
+		});
+	}
+
+	registerLeafChangeEvent() {
+		this.registerEvent(this.app.workspace.on("active-leaf-change", (file) => {
+			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (activeView === null) {
+				return;
+			}
+			const editor = activeView.editor;
+			this.settings.enableEditDurationKey && this.settings.useCustomFrontmatterHandlingSolution && this.setEditDurationBar(true, editor);
+		}));
+	}
+
+	registerKeyDownDOMEvent() {
+		this.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
+			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
+				const dateNow = moment();
+				const dateFormatted = dateNow.format(this.settings.modifiedKeyFormat);
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView === null) {
+					return;
+				}
+				const editor: Editor = activeView.editor;
+	
+				this.editorUpdateKey(editor, this.settings.modifiedKeyName, dateFormatted);
+				if (this.settings.enableEditDurationKey) {
+					this.allowEditDurationUpdate && this.updateEditDuration(editor);
+					this.setEditDurationBar(true, editor);
+				}
+			}
+		});
+	}
+
+	registerFileModificationEvent() {
+		this.registerEvent(this.app.vault.on('modify', (file) => {
+			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (activeView === null) {
+				return;
+			}
+			const editor: Editor = activeView.editor;
+			if (this.settings.useCustomFrontmatterHandlingSolution === false) {
+				if (this.settings.enableEditDurationKey) {
+					this.allowEditDurationUpdate && this.standardUpdateEditDuration(file);
+					this.setEditDurationBar(false, file);
+				}
+				if (this.settings.enableModifiedKeyUpdate)
+				{
+					this.standardUpdateModifiedKey(file);
+				}
+			}
+		}));
+	}
+
+	setUpStatusBarItems() {
+		if (this.settings.enableClock) {
 			// # Adds a status bar
 			this.clockBar = this.addStatusBarItem();
 			this.clockBar.setText(":)")
@@ -68,57 +146,6 @@ export default class TimeThings extends Plugin {
 			this.editDurationBar = this.addStatusBarItem();
 			this.editDurationBar.setText("⌛");
 		}
-
-		// # On file modification
-		this.registerEvent(this.app.vault.on('modify', (file) => {
-			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			if (activeView === null) {
-				return;
-			}
-			const editor: Editor = activeView.editor;
-			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
-				return;
-			}
-			if (this.settings.enableEditDurationKey) {
-				this.allowEditDurationUpdate && this.objectUpdateEditDuration(file);
-				this.setEditDurationBar(false, file);
-			}
-			if (this.settings.enableModifiedKeyUpdate)
-			{
-				this.objectUpdateModifiedKey(file);
-			}
-		}))
-
-		this.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
-			if (this.settings.useCustomFrontmatterHandlingSolution === false) {
-				return;
-			}
-			const dateNow = moment();
-			const dateFormatted = dateNow.format(this.settings.modifiedKeyFormat);
-			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			if (activeView === null) {
-				return;
-			}
-			const editor: Editor = activeView.editor;
-
-			this.editorUpdateKey(editor, this.settings.modifiedKeyName, dateFormatted);
-			if (this.settings.enableEditDurationKey) {
-				this.allowEditDurationUpdate && this.updateEditDuration(editor);
-				this.setEditDurationBar(true, editor);
-			}
-		});
-
-		this.registerEvent(this.app.workspace.on("active-leaf-change", (file) => {
-			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			if (activeView === null) {
-				return;
-			}
-			const editor = activeView.editor;
-			this.settings.enableEditDurationKey && this.settings.useCustomFrontmatterHandlingSolution && this.setEditDurationBar(true, editor);
-		}))
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new TimeThingsSettingsTab(this.app, this));
 	}
 
 	setEditDurationBar(useCustomSolution: false, solution: TAbstractFile): void;
@@ -137,7 +164,7 @@ export default class TimeThings extends Plugin {
 		if (solution instanceof TAbstractFile) {
 			let file = solution;
 			await this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
-				value = this.objectGetValue(frontmatter, this.settings.editDurationPath);
+				value = this.standardGetValue(frontmatter, this.settings.editDurationPath);
 				if (value === undefined) {
 					value = 0;
 				}
@@ -147,13 +174,19 @@ export default class TimeThings extends Plugin {
 		if (+value < 60) {
 			text = `⌛ <1 m`;
 		}
-		else if (+value < 60 * 60 * 24) {
+		else if (+value < 60 * 60) {
 			const minutes = Math.floor(+value / 60);
 			text = `⌛ ${minutes} m`;
 		}
+		else if (+value < 60 * 60 * 24) {
+			const hours = Math.floor(+value / (60 * 60));
+			const minutes = Math.floor((+value - (hours * 60 * 60)) / 60);
+			text = `⌛ ${hours} h ${minutes} m`;
+		}
 		else {
 			const days = Math.floor(+value / (24 * 60 * 60));
-			text = `⌛ ${days} d`;
+			const hours = Math.floor((+value - (days * 24 * 60 * 60)) / (60 * 60));
+			text = `⌛ ${days} d ${hours} h`;
 		}
 		this.editDurationBar.setText(text);
 	}
@@ -172,16 +205,16 @@ export default class TimeThings extends Plugin {
 		this.allowEditDurationUpdate = true;
 	}
 
-	async objectUpdateEditDuration(file: TAbstractFile) {
+	async standardUpdateEditDuration(file: TAbstractFile) {
 		this.allowEditDurationUpdate = false;
 		await this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
-			let value = this.objectGetValue(frontmatter, this.settings.editDurationPath);
+			let value = this.standardGetValue(frontmatter, this.settings.editDurationPath);
 			if (value === undefined) {
 				value = "0";
 			}
 			const newValue = +value + 10;
 
-			this.objectSetValue(frontmatter, this.settings.editDurationPath, newValue);
+			this.standardSetValue(frontmatter, this.settings.editDurationPath, newValue);
 		})
 		await sleep(10000);
 		this.allowEditDurationUpdate = true;
@@ -304,24 +337,24 @@ export default class TimeThings extends Plugin {
 		return /^[\s\t]/.test(line);
 	}
 
-	async objectUpdateModifiedKey(file: TAbstractFile) {
+	async standardUpdateModifiedKey(file: TAbstractFile) {
 
 		await this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
 			const dateNow = moment();
 			const dateFormatted = dateNow.format(this.settings.modifiedKeyFormat);
 
-			const updateKeyValue = moment(this.objectGetValue(frontmatter, this.settings.modifiedKeyName), this.settings.modifiedKeyFormat);
+			const updateKeyValue = moment(this.standardGetValue(frontmatter, this.settings.modifiedKeyName), this.settings.modifiedKeyFormat);
 			
-			if (updateKeyValue.add(1, 'minutes') > dateNow)
+			if (updateKeyValue.add(this.settings.updateIntervalFrontmatterMinutes, 'minutes') > dateNow)
 			{
 				return;
 			}
 			
-			this.objectSetValue(frontmatter, this.settings.modifiedKeyName, dateFormatted);
+			this.standardSetValue(frontmatter, this.settings.modifiedKeyName, dateFormatted);
 		})
 	}
 
-	objectGetValue(obj: any, fieldPath: string) {
+	standardGetValue(obj: any, fieldPath: string) {
 		const keys = fieldPath.split('.');
 		let value = obj;
 	  
@@ -335,7 +368,7 @@ export default class TimeThings extends Plugin {
 		return value;
 	}
 
-	objectSetValue(obj: any, path: string, value: any) {
+	standardSetValue(obj: any, path: string, value: any) {
 		const keys = path.split('.');
 		let currentLevel = obj;
 	  
@@ -523,11 +556,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 				  })
 				.setDynamicTooltip(),
 				);
-
 			}
-			
-
-
 		}
 
 
@@ -544,6 +573,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 						this.plugin.settings.enableEditDurationKey = newValue;
 						await this.plugin.saveSettings();
 						await this.display();
+						// await this.plugin.editDurationBar.toggle(this.plugin.settings.enableEditDurationKey);
 					}),);
 
 		if (this.plugin.settings.enableEditDurationKey === true) {
