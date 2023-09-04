@@ -4,6 +4,8 @@ Show clock in status bar. Sync modified file property with frontmatter.
 
 This plugin uses moment.js. It's a time manipulation library that is already included in Obsidian.
 
+![Obsidian_vH8xXX5e7Z](https://github.com/DynamicPlayerSector/timethings/assets/65742767/67edb231-1149-4896-a0f1-6cfa2aec3d93)
+
 ## Clock
 
 ![image](https://github.com/DynamicPlayerSector/timethings/assets/65742767/c2b4c4e0-002b-43ea-8b94-6860d6f7c703)
@@ -14,15 +16,11 @@ This plugin uses moment.js. It's a time manipulation library that is already inc
 
 ## Modified frontmatter key
 
-<img src="https://github.com/DynamicPlayerSector/timethings/assets/65742767/661884e4-666b-4793-9a46-de12edb831ed"  height="800">
-
 - Have a key that records the time when you last modified a file.
 - Supports nesting.
 - Option to change the date format. Recommended: `YYYY-MM-DD[T]HH:mm:ss.SSSZ`.
 
 ## Edit duration frontmatter key
-
-![Obsidian_M7cBoaBPIq](https://github.com/DynamicPlayerSector/timethings/assets/65742767/16649b3b-4e4c-4e5f-9eed-3a28c8d5d4ec)
 
 - Track time spent editing a note
 - Display editing duration of current note in the status bar
