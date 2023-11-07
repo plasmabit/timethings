@@ -19,7 +19,7 @@ interface TimeThingsSettings {
 }
 
 const DEFAULT_SETTINGS: TimeThingsSettings = {
-	clockFormat: 'HH:mm:ss',
+	clockFormat: 'hh:mm A',
 	updateIntervalMilliseconds: '1000',
 	isUTC: false,
 	modifiedKeyName: 'updated_at',
@@ -67,6 +67,9 @@ export default class TimeThings extends Plugin {
 					return;
 				}
 			const editor: Editor = activeView.editor;
+			if (editor.hasFocus() === false) {
+				return;
+			}
 			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
 				if (this.settings.enableEditDurationKey) {
 					this.setEditDurationBar(true, editor);
@@ -76,12 +79,15 @@ export default class TimeThings extends Plugin {
 	}
 
 	registerLeafChangeEvent() {
-		this.registerEvent(this.app.workspace.on("active-leaf-change", (file) => {
+		this.registerEvent(this.app.workspace.on("active-leaf-change", (leaf) => {
 			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (activeView === null) {
 				return;
 			}
 			const editor = activeView.editor;
+			if (editor.hasFocus() === false) {
+				return;
+			}
 			this.settings.enableEditDurationKey && this.settings.useCustomFrontmatterHandlingSolution && this.setEditDurationBar(true, editor);
 		}));
 	}
@@ -89,14 +95,18 @@ export default class TimeThings extends Plugin {
 	registerKeyDownDOMEvent() {
 		this.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
 			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
-				const dateNow = moment();
-				const dateFormatted = dateNow.format(this.settings.modifiedKeyFormat);
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView === null) {
 					return;
 				}
+
 				const editor: Editor = activeView.editor;
-	
+				if (editor.hasFocus() === false) {
+					return;
+				}
+				const dateNow = moment();
+				const dateFormatted = dateNow.format(this.settings.modifiedKeyFormat);
+
 				this.editorUpdateKey(editor, this.settings.modifiedKeyName, dateFormatted);
 				if (this.settings.enableEditDurationKey) {
 					this.allowEditDurationUpdate && this.updateEditDuration(editor);
@@ -108,6 +118,7 @@ export default class TimeThings extends Plugin {
 
 	registerFileModificationEvent() {
 		this.registerEvent(this.app.vault.on('modify', (file) => {
+			console.log(file.path);
 			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (activeView === null) {
 				return;
@@ -448,7 +459,8 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 						this.plugin.settings.useCustomFrontmatterHandlingSolution = newValue;
 						await this.plugin.saveSettings();
 						await this.display();
-				}),);
+					}),
+			);
 
 		containerEl.createEl('h1', { text: 'Status bar' });
 		containerEl.createEl('p', { text: 'Displays clock in the status bar.' });
@@ -463,7 +475,8 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 						this.plugin.settings.enableClock = newValue;
 						await this.plugin.saveSettings();
 						await this.display();
-				}),);
+				}),
+			);
 
 		if (this.plugin.settings.enableClock === true) {
 			
@@ -476,7 +489,8 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.clockFormat = value;
 						await this.plugin.saveSettings();
-					}));
+					})
+				);
 			
 			new Setting(containerEl)
 				.setName('Update interval')
@@ -487,7 +501,8 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.updateIntervalMilliseconds = value;
 						await this.plugin.saveSettings();
-					}));
+					})
+				);
 	
 			new Setting(containerEl)
 				.setName('UTC timezone')
@@ -498,14 +513,15 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 						.onChange(async (newValue) => {
 							this.plugin.settings.isUTC = newValue;
 							await this.plugin.saveSettings();
-				}),);
+						}),
+				);
 
 		}
 
 
 		containerEl.createEl('h1', { text: 'Frontmatter' });
 		containerEl.createEl('p', { text: 'Handles timestamp keys in frontmatter.' });
-		containerEl.createEl('h2', { text: 'Modified key' });
+		containerEl.createEl('h2', { text: '🔑 Modified' });
 
 		new Setting(containerEl)
 			.setName('Enable update of the modified key')
@@ -517,7 +533,8 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 						this.plugin.settings.enableModifiedKeyUpdate = newValue;
 						await this.plugin.saveSettings();
 						await this.display();
-			}),);
+					}),
+			);
 
 		if (this.plugin.settings.enableModifiedKeyUpdate === true) {
 
@@ -530,7 +547,8 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.modifiedKeyName = value;
 					await this.plugin.saveSettings();
-			}));
+				})
+			);
 	
 			new Setting(containerEl)
 			.setName('Modified key format')
@@ -541,7 +559,8 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.modifiedKeyFormat = value;
 					await this.plugin.saveSettings();
-			}));
+				})
+			);
 
 			if (this.plugin.settings.useCustomFrontmatterHandlingSolution === false) {
 
@@ -562,7 +581,7 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 		}
 
 
-		containerEl.createEl('h2', { text: 'Edit duration key' });
+		containerEl.createEl('h2', { text: '🔑 Edit duration' });
 		containerEl.createEl('p', { text: 'Track for how long you have been editing a note.' });
 
 		new Setting(containerEl)
@@ -613,8 +632,24 @@ class TimeThingsSettingsTab extends PluginSettingTab {
 					})
 			.setDynamicTooltip(),
 			);
-
 		}
+
+		containerEl.createEl('h1', { text: 'Danger zone' });
+		containerEl.createEl('p', { text: 'You\'ve been warned!' });
+
+		new Setting(containerEl)
+			.setName('Reset settings')
+			.setDesc("Resets settings to default")
+			.addButton((btn) =>
+				btn
+					.setIcon("switch")
+					.setButtonText("Reset settings")
+					.setTooltip("Reset settings")
+					.onClick(() => {
+						this.plugin.settings = Object.assign({}, DEFAULT_SETTINGS, this.plugin.loadData());
+						this.display();
+					}),
+		);
 		
 	}
 	
