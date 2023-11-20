@@ -6,5 +6,6 @@
 	"description": "Show clock in the corner. Track total editing time of a note and the last time it was modified.",
 	"author": "Nick Winters",
 	"authorUrl": "https://github.com/DynamicPlayerSector",
+	"fundingUrl": "https://www.patreon.com/nickwinters",
 	"isDesktopOnly": true
 }
