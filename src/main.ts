@@ -22,7 +22,7 @@ export default class TimeThings extends Plugin {
 		await this.loadSettings();
 
 		// Variables initialization
-		this.isDebugBuild = true;    // for debugging purposes
+		this.isDebugBuild = false;    // for debugging purposes
 		this.allowEditDurationUpdate = true;
 
 		this.setUpStatusBarItems();
@@ -73,17 +73,41 @@ export default class TimeThings extends Plugin {
 			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView === null) {
+					if (this.isDebugBuild) {
+						console.log("No active view");
+					}
 					return;
 				}
 
 				const editor: Editor = activeView.editor;
 				if (editor.hasFocus() === false) {
+					if (this.isDebugBuild) {
+						console.log("No focus");
+					}
 					return;
 				}
 				const dateNow = moment();
-				const dateFormatted = dateNow.format(this.settings.modifiedKeyFormat);
+				const userDateFormat = this.settings.modifiedKeyFormat;
+				const dateFormatted = dateNow.format(userDateFormat);
+				const userModifiedKeyName = this.settings.modifiedKeyName;
+				const valueLineNumber = CAMS.getLine(editor, userModifiedKeyName);
+				if (typeof valueLineNumber !== 'number') {
+					if (this.isDebugBuild) {
+						console.log("Not a number");
+					}
+					return;
+				}
 
-				this.editorUpdateKey(editor, this.settings.modifiedKeyName, dateFormatted);
+				const value = editor.getLine(valueLineNumber).split(/:(.*)/s)[1].trim();
+				if (moment(value, userDateFormat, true).isValid() === false) {    // Little safecheck in place to reduce chance of bugs
+					if (this.isDebugBuild) {
+						console.log("Wrong format");
+					}
+					return;
+				}
+
+				CAMS.setValue(editor, userModifiedKeyName, dateFormatted);
+
 				if (this.settings.enableEditDurationKey) {
 					this.allowEditDurationUpdate && this.updateEditDuration(editor);
 					this.setEditDurationBar(true, editor);
@@ -92,9 +116,10 @@ export default class TimeThings extends Plugin {
 		});
 	}
 
+
+
 	registerFileModificationEvent() {
 		this.registerEvent(this.app.vault.on('modify', (file) => {
-			console.log(file.path);
 			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (activeView === null) {
 				return;
@@ -189,7 +214,7 @@ export default class TimeThings extends Plugin {
 		}
 		const value = editor.getLine(fieldLine).split(/:(.*)/s)[1].trim();
 		const newValue = +value + 1;
-		this.editorUpdateKey(editor, this.settings.editDurationPath, newValue.toString());
+		CAMS.setValue(editor, this.settings.editDurationPath, newValue.toString());
 		await sleep(1000 - (this.settings.nonTypingEditingTimePercentage * 10));
 		this.allowEditDurationUpdate = true;
 	}
@@ -218,51 +243,6 @@ export default class TimeThings extends Plugin {
 		const emoji = this.getClockEmojiForHour(dateChosen);
 
 		this.clockBar.setText(emoji + " " + dateFormatted);
-	}
-	
-	isFrontmatterPresent(editor: Editor): boolean {
-		if (editor.getLine(0) !== "---") {
-			return false;
-		}
-		for (let i = 1; i <= editor.lastLine(); i++) {
-			if (editor.getLine(i) === "---") {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	frontmatterEndLine(editor: Editor): number | undefined {
-		if (this.isFrontmatterPresent(editor)) {
-			for (let i = 1; i <= editor.lastLine(); i++) {
-				if (editor.getLine(i) === "---") {
-					return i;
-				}
-			}
-		}
-		return undefined; // # End line not found
-	}
-
-	editorUpdateKey(editor: Editor, fieldPath: string, fieldValue: string) {
-		const fieldLine = CAMS.getLine(editor, fieldPath);
-		if (fieldLine === undefined) {
-			return;
-		}
-		if (fieldPath === this.settings.modifiedKeyName) {
-			const value = editor.getLine(fieldLine).split(/:(.*)/s)[1].trim();
-			if (moment(value, this.settings.modifiedKeyFormat, true).isValid() === false) {    // Little safecheck in place to reduce chance of bugs
-				this.isDebugBuild && console.log("not valid date");
-				this.isDebugBuild && console.log(fieldLine);
-				return;
-			}
-		}
-		const initialLine = editor.getLine(fieldLine).split(':', 1);
-		const newLine = initialLine[0] + ": " + fieldValue;
-		editor.setLine(fieldLine, newLine);
-	}
-
-	isLineIndented(line: string): boolean {
-		return /^[\s\t]/.test(line);
 	}
 
 	async standardUpdateModifiedKey(file: TAbstractFile) {

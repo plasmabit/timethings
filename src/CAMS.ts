@@ -1,28 +1,5 @@
-import { Editor} from 'obsidian';
+import { Editor, Setting } from 'obsidian';
 import { moment } from 'obsidian';
-import TimeThings from './main'
-import {
-	DEFAULT_SETTINGS,
-	TimeThingsSettings,
-	TimeThingsSettingsTab,
-} from './settings';
-
-export function setValue(editor: Editor, fieldPath: string, fieldValue: string) {
-  const fieldLine = this.getLine(editor, fieldPath);
-  if (fieldLine === undefined) {
-    return;
-  }
-  if (fieldPath === "updated_at") { // settings prevent from export working
-    const value = editor.getLine(fieldLine).split(/:(.*)/s)[1].trim();
-    if (moment(value, "YYYY-MM-DD[T]HH:mm:ss.SSSZ", true).isValid() === false) {    // Little safecheck in place to reduce chance of bugs
-      return;
-    }
-  }
-  const initialLine = editor.getLine(fieldLine).split(':', 1);
-  const newLine = initialLine[0] + ": " + fieldValue;
-  editor.setLine(fieldLine, newLine);
-}
-
 
 export function isLineIndented(line: string): boolean {
   return /^[\s\t]/.test(line);
@@ -106,4 +83,14 @@ export function getLine(editor: Editor, fieldPath: string): number | undefined {
   }
 
   return undefined;
+}
+
+export function setValue(editor: Editor, fieldPath: string, fieldValue: string) { // The thing with this function is that it uses the format from settings to check against. I can make it as an argument that can be passed, or better yet, eradicate the check from the function to make it more atomic and place it somewhere else in the main code.
+  const fieldLine = getLine(editor, fieldPath);
+  if (fieldLine === undefined) {
+    return;
+  }
+  const initialLine = editor.getLine(fieldLine).split(':', 1);
+  const newLine = initialLine[0] + ": " + fieldValue;
+  editor.setLine(fieldLine, newLine);
 }
