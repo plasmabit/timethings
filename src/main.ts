@@ -8,6 +8,7 @@ import {
 	TimeThingsSettings,
 	TimeThingsSettingsTab,
 } from './settings';
+import * as timeUtils from './time.utils';
 
 export default class TimeThings extends Plugin {
 	settings: TimeThingsSettings;
@@ -38,6 +39,9 @@ export default class TimeThings extends Plugin {
 
 	registerMouseDownDOMEvent() {
 		this.registerDomEvent(document, 'mousedown', (evt: MouseEvent) => {
+
+			// Prepare everything
+
 			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView === null) {
 					return;
@@ -46,6 +50,9 @@ export default class TimeThings extends Plugin {
 			if (editor.hasFocus() === false) {
 				return;
 			}
+
+			// Change the duration icon in status bar
+
 			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
 				if (this.settings.enableEditDurationKey) {
 					this.setEditDurationBar(true, editor);
@@ -56,6 +63,9 @@ export default class TimeThings extends Plugin {
 
 	registerLeafChangeEvent() {
 		this.registerEvent(this.app.workspace.on("active-leaf-change", (leaf) => {
+
+			// Prepare everything
+
 			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (activeView === null) {
 				return;
@@ -64,13 +74,22 @@ export default class TimeThings extends Plugin {
 			if (editor.hasFocus() === false) {
 				return;
 			}
+
+			// Change the duration icon in status bar
+
 			this.settings.enableEditDurationKey && this.settings.useCustomFrontmatterHandlingSolution && this.setEditDurationBar(true, editor);
 		}));
 	}
 
 	registerKeyDownDOMEvent() {
 		this.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
+
+			// If CAMS enabled
+
 			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
+
+				// Make sure the document is ready for edit
+
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView === null) {
 					if (this.isDebugBuild) {
@@ -78,7 +97,6 @@ export default class TimeThings extends Plugin {
 					}
 					return;
 				}
-
 				const editor: Editor = activeView.editor;
 				if (editor.hasFocus() === false) {
 					if (this.isDebugBuild) {
@@ -86,6 +104,9 @@ export default class TimeThings extends Plugin {
 					}
 					return;
 				}
+
+				// Update "updated_at"
+
 				const dateNow = moment();
 				const userDateFormat = this.settings.modifiedKeyFormat;
 				const dateFormatted = dateNow.format(userDateFormat);
@@ -97,7 +118,6 @@ export default class TimeThings extends Plugin {
 					}
 					return;
 				}
-
 				const value = editor.getLine(valueLineNumber).split(/:(.*)/s)[1].trim();
 				if (moment(value, userDateFormat, true).isValid() === false) {    // Little safecheck in place to reduce chance of bugs
 					if (this.isDebugBuild) {
@@ -105,8 +125,9 @@ export default class TimeThings extends Plugin {
 					}
 					return;
 				}
-
 				CAMS.setValue(editor, userModifiedKeyName, dateFormatted);
+
+				// Update duration icon in status bar
 
 				if (this.settings.enableEditDurationKey) {
 					this.allowEditDurationUpdate && this.updateEditDuration(editor);
@@ -116,22 +137,33 @@ export default class TimeThings extends Plugin {
 		});
 	}
 
-
-
 	registerFileModificationEvent() {
 		this.registerEvent(this.app.vault.on('modify', (file) => {
+
+			// Make everything ready for edit
+
 			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (activeView === null) {
 				return;
 			}
 			const editor: Editor = activeView.editor;
+
 			if (this.settings.useCustomFrontmatterHandlingSolution === false) {
+
+				// If CAMS disabled
+
 				if (this.settings.enableEditDurationKey) {
+
+					// Update duration icon in status bar
+
 					this.allowEditDurationUpdate && this.standardUpdateEditDuration(file);
 					this.setEditDurationBar(false, file);
 				}
 				if (this.settings.enableModifiedKeyUpdate)
 				{
+
+					// Update "updated_at"
+
 					this.standardUpdateModifiedKey(file);
 				}
 			}
@@ -139,24 +171,24 @@ export default class TimeThings extends Plugin {
 	}
 
 	setUpStatusBarItems() {
-		if (this.settings.enableClock) {
-			// # Adds a status bar
+		if (this.settings.enableClock) { // Add clock icon
+			// Adds a status bar
 			this.clockBar = this.addStatusBarItem();
 			this.clockBar.setText(":)")
 
-			// # Change status bar text every second
+			// Change status bar text every second
 			this.updateClockBar();
 			this.registerInterval(
 				window.setInterval(this.updateClockBar.bind(this), +this.settings.updateIntervalMilliseconds)
 			);
 		}
 
-		if (this.isDebugBuild) {
+		if (this.isDebugBuild) { // Add DEBUG icon
 			this.debugBar = this.addStatusBarItem();
 			this.debugBar.setText("☢️ DEBUG BUILD ☢️")
 		}
 
-		if (this.settings.enableEditDurationKey) {
+		if (this.settings.enableEditDurationKey) { // Ad duration icon
 			this.editDurationBar = this.addStatusBarItem();
 			this.editDurationBar.setText("⌛");
 		}
@@ -164,7 +196,7 @@ export default class TimeThings extends Plugin {
 
 	setEditDurationBar(useCustomSolution: false, solution: TAbstractFile): void;
 	setEditDurationBar(useCustomSolution: true, solution: Editor): void;
-	async setEditDurationBar(useCustomSolution: boolean, solution: Editor | TAbstractFile) {
+	async setEditDurationBar(useCustomSolution: boolean, solution: Editor | TAbstractFile) { // what the hell is this monstrosity
 		let value = 0;
 		if (solution instanceof Editor) {
 			let editor = solution;
@@ -206,30 +238,47 @@ export default class TimeThings extends Plugin {
 	}
 
 	async updateEditDuration(editor: Editor) {
+
+		// Prepare everything
+
 		this.allowEditDurationUpdate = false;
 		const fieldLine = CAMS.getLine(editor, this.settings.editDurationPath);
 		if (fieldLine === undefined) {
 			this.allowEditDurationUpdate = true;
 			return;
 		}
+
+		// Increment
+
 		const value = editor.getLine(fieldLine).split(/:(.*)/s)[1].trim();
 		const newValue = +value + 1;
 		CAMS.setValue(editor, this.settings.editDurationPath, newValue.toString());
+
+		// Cool down
+
 		await sleep(1000 - (this.settings.nonTypingEditingTimePercentage * 10));
 		this.allowEditDurationUpdate = true;
 	}
 
 	async standardUpdateEditDuration(file: TAbstractFile) {
+
+		// Prepare everything
+
 		this.allowEditDurationUpdate = false;
 		await this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
 			let value = BOMS.getValue(frontmatter, this.settings.editDurationPath);
 			if (value === undefined) {
 				value = "0";
 			}
-			const newValue = +value + 10;
 
+			// Increment
+
+			const newValue = +value + 10;
 			BOMS.setValue(frontmatter, this.settings.editDurationPath, newValue);
 		})
+
+		// Cool down
+
 		await sleep(10000 - (this.settings.nonTypingEditingTimePercentage * 100));
 		this.allowEditDurationUpdate = true;
 	}
@@ -240,7 +289,7 @@ export default class TimeThings extends Plugin {
 
 		const dateChosen = this.settings.isUTC ? dateUTC : dateNow;
 		const dateFormatted = dateChosen.format(this.settings.clockFormat);
-		const emoji = this.getClockEmojiForHour(dateChosen);
+		const emoji = timeUtils.momentToClockEmoji(dateChosen);
 
 		this.clockBar.setText(emoji + " " + dateFormatted);
 	}
@@ -261,25 +310,7 @@ export default class TimeThings extends Plugin {
 			BOMS.setValue(frontmatter, this.settings.modifiedKeyName, dateFormatted);
 		})
 	}
-
-	getClockEmojiForHour(time: moment.Moment): string {
-		const hour = time.hour();
-		const hour12 = (hour % 12) || 12;
-
-		type NumberDictionary = {
-			[key: number]: string;
-		};
-
-		const clockEmojiMap: NumberDictionary = {
-			1: '🕐', 2: '🕑', 3: '🕒', 4: '🕓', 5: '🕔', 6: '🕕',
-			7: '🕖', 8: '🕗', 9: '🕘', 10: '🕙', 11: '🕚', 12: '🕛'
-		};
-
-		const result: string = clockEmojiMap[hour12] || '⏰'; // Default emoji for unknown hours
-		return result;
-	}
 	
-
 	onunload() {
 
 	}
