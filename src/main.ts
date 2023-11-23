@@ -82,9 +82,13 @@ export default class TimeThings extends Plugin {
 	}
 
 	registerKeyDownDOMEvent() {
-		this.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
+		this.registerDomEvent(document, 'keyup', (evt: KeyboardEvent) => {
 
 			// If CAMS enabled
+
+			if (evt.ctrlKey) {
+				return;
+			}
 
 			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
 
