@@ -2,6 +2,7 @@ import { App, PluginSettingTab, Setting } from 'obsidian';
 import TimeThings from './main';
 
 export interface TimeThingsSettings {
+	showEmojiStatusBar: boolean;
 	clockFormat: string;
 	isUTC: boolean;
 	updateIntervalMilliseconds: string;
@@ -11,12 +12,16 @@ export interface TimeThingsSettings {
 	enableModifiedKeyUpdate: boolean;
 	useCustomFrontmatterHandlingSolution: boolean;
 	updateIntervalFrontmatterMinutes: number;
-	editDurationPath: string,
-	enableEditDurationKey: boolean,
-	nonTypingEditingTimePercentage: number,
+	editDurationPath: string;
+	enableEditDurationKey: boolean;
+	nonTypingEditingTimePercentage: number;
+	enableSwitch: boolean;
+	switchKey: string;
+	switchKeyValue: string;
 }
 
 export const DEFAULT_SETTINGS: TimeThingsSettings = {
+	showEmojiStatusBar: true,
 	clockFormat: 'hh:mm A',
 	updateIntervalMilliseconds: '1000',
 	isUTC: false,
@@ -29,6 +34,9 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	editDurationPath: "edited_seconds",
 	enableEditDurationKey: true,
 	nonTypingEditingTimePercentage: 22,
+	enableSwitch: false,
+	switchKey: "timethings.switch",
+	switchKeyValue: "true",
 }
 
 export class TimeThingsSettingsTab extends PluginSettingTab {
@@ -71,7 +79,20 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			);
 
 		containerEl.createEl('h1', { text: 'Status bar' });
-		containerEl.createEl('p', { text: 'Displays clock in the status bar.' });
+		containerEl.createEl('p', { text: 'Displays clock and duration edited in the status bar' });
+
+		new Setting(containerEl)
+		.setName('Enable emojis')
+		.setDesc('Show emojis in the status bar?')
+		.addToggle((toggle) =>
+			toggle
+				.setValue(this.plugin.settings.showEmojiStatusBar)
+				.onChange(async (newValue) => {
+					this.plugin.settings.showEmojiStatusBar = newValue;
+					await this.plugin.saveSettings();
+					await this.display();
+				}),
+		);
 
 		new Setting(containerEl)
 			.setName('Enable status bar clock')
@@ -83,8 +104,9 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 						this.plugin.settings.enableClock = newValue;
 						await this.plugin.saveSettings();
 						await this.display();
-				}),
+					}),
 			);
+
 
 		if (this.plugin.settings.enableClock === true) {
 			

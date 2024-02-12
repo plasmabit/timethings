@@ -88,9 +88,17 @@ export default class TimeThings extends Plugin {
 			const ignoreKeys = [
 				"ArrowDown",
 				"ArrowUp",
+				"ArrowLeft",
+				"ArrowRight",
 				"Tab",
 				"CapsLock",
 				"Alt",
+				"PageUp",
+				"PageDown",
+				"Home",
+				"End",
+				"Meta",
+				"Escape",
 			]
 
 			if (evt.ctrlKey || ignoreKeys.includes(evt.key)) {
@@ -195,12 +203,12 @@ export default class TimeThings extends Plugin {
 
 		if (this.isDebugBuild) { // Add DEBUG icon
 			this.debugBar = this.addStatusBarItem();
-			this.debugBar.setText("☢️ DEBUG BUILD ☢️")
+			this.settings.showEmojiStatusBar ? this.debugBar.setText("☢️ DEBUG BUILD ☢️") : this.debugBar.setText("/ DEBUG BUILD /"); 
 		}
 
 		if (this.settings.enableEditDurationKey) { // Ad duration icon
 			this.editDurationBar = this.addStatusBarItem();
-			this.editDurationBar.setText("⌛");
+			this.settings.showEmojiStatusBar ? this.editDurationBar.setText("⌛") : this.editDurationBar.setText("/");
 		}
 	}
 
@@ -228,21 +236,21 @@ export default class TimeThings extends Plugin {
 		}
 		let text = "";
 		if (+value < 60) {
-			text = `⌛ <1 m`;
+			text = this.settings.showEmojiStatusBar ? `⌛ <1 m` : `<1 m`;
 		}
 		else if (+value < 60 * 60) {
 			const minutes = Math.floor(+value / 60);
-			text = `⌛ ${minutes} m`;
+			text = this.settings.showEmojiStatusBar ? `⌛ ${minutes} m` : `${minutes} m`;
 		}
 		else if (+value < 60 * 60 * 24) {
 			const hours = Math.floor(+value / (60 * 60));
 			const minutes = Math.floor((+value - (hours * 60 * 60)) / 60);
-			text = `⌛ ${hours} h ${minutes} m`;
+			text = this.settings.showEmojiStatusBar ? `⌛ ${hours} h ${minutes} m` : `${hours} h ${minutes} m`;
 		}
 		else {
 			const days = Math.floor(+value / (24 * 60 * 60));
 			const hours = Math.floor((+value - (days * 24 * 60 * 60)) / (60 * 60));
-			text = `⌛ ${days} d ${hours} h`;
+			text = this.settings.showEmojiStatusBar ? `⌛ ${days} d ${hours} h` : `${days} d ${hours} h`;
 		}
 		this.editDurationBar.setText(text);
 	}
@@ -301,7 +309,7 @@ export default class TimeThings extends Plugin {
 		const dateFormatted = dateChosen.format(this.settings.clockFormat);
 		const emoji = timeUtils.momentToClockEmoji(dateChosen);
 
-		this.clockBar.setText(emoji + " " + dateFormatted);
+		this.settings.showEmojiStatusBar ? this.clockBar.setText(emoji + " " + dateFormatted) : this.clockBar.setText(dateFormatted);
 	}
 
 	async standardUpdateModifiedKey(file: TAbstractFile) {
