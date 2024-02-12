@@ -2,41 +2,61 @@ import { App, PluginSettingTab, Setting } from 'obsidian';
 import TimeThings from './main';
 
 export interface TimeThingsSettings {
+	useCustomFrontmatterHandlingSolution: boolean;
+
 	showEmojiStatusBar: boolean;
+
 	clockFormat: string;
-	isUTC: boolean;
 	updateIntervalMilliseconds: string;
+	enableClock: boolean;
+	isUTC: boolean;
+
 	modifiedKeyName: string;
 	modifiedKeyFormat: string;
-	enableClock: boolean;
 	enableModifiedKeyUpdate: boolean;
-	useCustomFrontmatterHandlingSolution: boolean;
-	updateIntervalFrontmatterMinutes: number;
+
 	editDurationPath: string;
 	enableEditDurationKey: boolean;
+
+	updateIntervalFrontmatterMinutes: number;
+
 	nonTypingEditingTimePercentage: number;
+
 	enableSwitch: boolean;
 	switchKey: string;
 	switchKeyValue: string;
+
+	editedCyclesKey: string;
+	cycleDurationMinutes: string;
 }
 
 export const DEFAULT_SETTINGS: TimeThingsSettings = {
+	useCustomFrontmatterHandlingSolution: false,
+
 	showEmojiStatusBar: true,
+
 	clockFormat: 'hh:mm A',
 	updateIntervalMilliseconds: '1000',
+	enableClock: true,
 	isUTC: false,
+
 	modifiedKeyName: 'updated_at',
 	modifiedKeyFormat: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
-	enableClock: true,
 	enableModifiedKeyUpdate: true,
-	useCustomFrontmatterHandlingSolution: false,
-	updateIntervalFrontmatterMinutes: 1,
+
 	editDurationPath: "edited_seconds",
 	enableEditDurationKey: true,
+
+	updateIntervalFrontmatterMinutes: 1,
+
 	nonTypingEditingTimePercentage: 22,
+
 	enableSwitch: false,
 	switchKey: "timethings.switch",
 	switchKeyValue: "true",
+
+	editedCyclesKey: "edited_days",
+	cycleDurationMinutes: "1440",
 }
 
 export class TimeThingsSettingsTab extends PluginSettingTab {
