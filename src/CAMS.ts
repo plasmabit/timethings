@@ -1,5 +1,4 @@
-import { Editor, Setting } from 'obsidian';
-import { moment } from 'obsidian';
+import { Editor,} from 'obsidian';
 
 export function isLineIndented(line: string): boolean {
   return /^[\s\t]/.test(line);
@@ -31,14 +30,12 @@ export function frontmatterEndLine(editor: Editor): number | undefined {
 export function getLine(editor: Editor, fieldPath: string): number | undefined {
   const frontmatterLine = frontmatterEndLine(editor);
   const keys = fieldPath.split('.');
-  const depth = keys.length;
 
   if (frontmatterLine === undefined) {
     return undefined;
   }
 
   let targetDepth = 1;
-  let currentDepth = 1;
   let startLine = 1;
   let emergingPath = [];
 
@@ -51,8 +48,8 @@ export function getLine(editor: Editor, fieldPath: string): number | undefined {
 
       if (currentFieldName === key) {
         emergingPath.push(currentFieldName);
-        let targetPath = fieldPath.split('.');
-        let targetPathShrink = targetPath.slice(0, emergingPath.length);
+        const targetPath = fieldPath.split('.');
+        const targetPathShrink = targetPath.slice(0, emergingPath.length);
         if (targetPathShrink.join('.') === emergingPath.join('.') === false) {
           emergingPath.pop();
           startLine = i + 1;

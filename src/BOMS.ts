@@ -1,7 +1,3 @@
-import { TAbstractFile, TFile } from 'obsidian';
-import { moment } from 'obsidian';
-import TimeThings from './main'
-
 export function getValue(obj: any, fieldPath: string) {
     const keys = fieldPath.split('.');
     let value = obj;

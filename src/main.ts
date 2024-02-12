@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TAbstractFile, TFile, WorkspaceLeaf } from 'obsidian';
+import {Editor, MarkdownView, Plugin, TAbstractFile, TFile,} from 'obsidian';
 import { moment } from 'obsidian';
 
 import * as BOMS from './BOMS';
@@ -85,8 +85,15 @@ export default class TimeThings extends Plugin {
 		this.registerDomEvent(document, 'keyup', (evt: KeyboardEvent) => {
 
 			// If CAMS enabled
+			const ignoreKeys = [
+				"ArrowDown",
+				"ArrowUp",
+				"Tab",
+				"CapsLock",
+				"Alt",
+			]
 
-			if (evt.ctrlKey) {
+			if (evt.ctrlKey || ignoreKeys.includes(evt.key)) {
 				return;
 			}
 
@@ -150,7 +157,6 @@ export default class TimeThings extends Plugin {
 			if (activeView === null) {
 				return;
 			}
-			const editor: Editor = activeView.editor;
 
 			if (this.settings.useCustomFrontmatterHandlingSolution === false) {
 
@@ -203,7 +209,7 @@ export default class TimeThings extends Plugin {
 	async setEditDurationBar(useCustomSolution: boolean, solution: Editor | TAbstractFile) { // what the hell is this monstrosity
 		let value = 0;
 		if (solution instanceof Editor) {
-			let editor = solution;
+			const editor = solution;
 			const fieldLine = CAMS.getLine(editor, this.settings.editDurationPath);
 			if (fieldLine === undefined) {
 				this.editDurationBar.setText("⌛ --");
@@ -212,7 +218,7 @@ export default class TimeThings extends Plugin {
 			value = +editor.getLine(fieldLine).split(/:(.*)/s)[1].trim();
 		}
 		if (solution instanceof TAbstractFile) {
-			let file = solution;
+			const file = solution;
 			await this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
 				value = BOMS.getValue(frontmatter, this.settings.editDurationPath);
 				if (value === undefined) {

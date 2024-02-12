@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, SearchComponent, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting } from 'obsidian';
 import TimeThings from './main';
 
 export interface TimeThingsSettings {
@@ -182,7 +182,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 						.onChange(async (value) => {
 							this.plugin.settings.updateIntervalFrontmatterMinutes = value;
 							await this.plugin.saveSettings();
-				  })
+						})
 				.setDynamicTooltip(),
 				);
 			}

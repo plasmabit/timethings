@@ -1,4 +1,3 @@
-import { Editor, Setting } from 'obsidian';
 import { moment } from 'obsidian';
 
 export function momentToClockEmoji(time: moment.Moment): string {
