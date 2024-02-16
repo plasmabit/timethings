@@ -26,8 +26,9 @@ export interface TimeThingsSettings {
 	switchKey: string;
 	switchKeyValue: string;
 
+	enableCyclesKey: boolean;
 	editedCyclesKey: string;
-	cycleDurationMinutes: string;
+	cycleDurationMinutes: number;
 }
 
 export const DEFAULT_SETTINGS: TimeThingsSettings = {
@@ -55,8 +56,9 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	switchKey: "timethings.switch",
 	switchKeyValue: "true",
 
-	editedCyclesKey: "edited_days",
-	cycleDurationMinutes: "1440",
+	enableCyclesKey: true,
+	editedCyclesKey: "updated_days",
+	cycleDurationMinutes: 1440,
 };
 
 export class TimeThingsSettingsTab extends PluginSettingTab {
@@ -69,8 +71,9 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
-
 		containerEl.empty();
+
+		// #region prerequisites
 
 		const createLink = () => {
 			const linkEl = document.createDocumentFragment();
@@ -83,6 +86,10 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			);
 			return linkEl;
 		};
+
+		// #endregion
+
+		// #region custom frontmatter solution
 
 		new Setting(containerEl)
 			.setName("Use custom frontmatter handling solution")
@@ -102,6 +109,10 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 						await this.display();
 					}),
 			);
+
+		// #endregion
+
+		// #region status bar
 
 		containerEl.createEl("h1", { text: "Status bar" });
 		containerEl.createEl("p", {
@@ -181,11 +192,18 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				);
 		}
 
+		// #endregion
+
+		// #region keys
+
 		containerEl.createEl("h1", { text: "Frontmatter" });
 		containerEl.createEl("p", {
 			text: "Handles timestamp keys in frontmatter.",
 		});
-		containerEl.createEl("h2", { text: "🔑 Modified" });
+
+		// #region updated_at key
+
+		containerEl.createEl("h2", { text: "🔑 Modified timestamp" });
 
 		new Setting(containerEl)
 			.setName("Enable update of the modified key")
@@ -253,7 +271,11 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			}
 		}
 
-		containerEl.createEl("h2", { text: "🔑 Edit duration" });
+		// #endregion
+
+		// #region edited_duration key
+
+		containerEl.createEl("h2", { text: "🔑 Edited duration" });
 		containerEl.createEl("p", {
 			text: "Track for how long you have been editing a note.",
 		});
@@ -315,6 +337,79 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				);
 		}
 
+		// #endregion
+
+		// #region edited_cycles
+
+		containerEl.createEl("h2", { text: "🔑 Edited cycles" });
+		containerEl.createEl("p", {
+			text: "Track for how often you edit a note.",
+		});
+
+		new Setting(containerEl)
+			.setName("Enable edited cycles key")
+			.setDesc("")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.enableCyclesKey)
+					.onChange(async (newValue) => {
+						this.plugin.settings.enableCyclesKey = newValue;
+						await this.plugin.saveSettings();
+						await this.display();
+					}),
+			);
+
+		if (this.plugin.settings.enableCyclesKey === true) {
+			new Setting(containerEl)
+				.setName("Edit cycles key name")
+				.setDesc(
+					"Supports nested keys. For example `timethings.updated_days`",
+				)
+				.addText((text) =>
+					text
+						.setPlaceholder("edited_seconds")
+						.setValue(this.plugin.settings.editedCyclesKey)
+						.onChange(async (value) => {
+							this.plugin.settings.editedCyclesKey = value;
+							await this.plugin.saveSettings();
+						}),
+				);
+
+			const options: Record<number, string> = {
+				10 : "Every 10 minutes",
+				1440 : "Every day",
+				43800 : "Every month",
+				131400 : "Every 3 months",
+				525600 : "Annualy",
+			};
+
+
+
+			new Setting(containerEl)
+				.setName('Reset the cycle duration. Currently: ' + options[this.plugin.settings.cycleDurationMinutes])
+				.setDesc('The counter will not go up if your last note update was within this timeframe')
+				.addDropdown((dropdown) => {
+					dropdown.addOption("10", "Every 10 minutes");
+					dropdown.addOption("1440", "Every day");
+					dropdown.addOption("43800", "Every month");
+					dropdown.addOption("131400", "Every 3 months");
+					dropdown.addOption("525600", "Annualy");
+
+					dropdown.setValue("Every 20 minutes");
+
+					dropdown.onChange(async (value) => {
+						this.plugin.settings.cycleDurationMinutes = +value;
+						await this.plugin.saveSettings();
+					});
+				});
+		}
+
+		// #endregion
+
+		// #endregion
+
+		// #region danger zone
+
 		containerEl.createEl("h1", { text: "Danger zone" });
 		containerEl.createEl("p", { text: "You've been warned!" });
 
@@ -335,5 +430,6 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 						this.display();
 					}),
 			);
+		// #endregion
 	}
 }
