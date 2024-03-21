@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Plugin, TAbstractFile, TFile } from "obsidian";
+import { Editor, MarkdownView, Plugin, TAbstractFile, TFile, Tasks } from "obsidian";
 import { moment } from "obsidian";
 
 import * as BOMS from "./BOMS";
@@ -9,6 +9,7 @@ import {
 	TimeThingsSettingsTab,
 } from "./settings";
 import * as timeUtils from "./time.utils";
+import { env } from "process";
 
 export default class TimeThings extends Plugin {
 	settings: TimeThingsSettings;
@@ -37,12 +38,62 @@ export default class TimeThings extends Plugin {
 		this.addSettingTab(new TimeThingsSettingsTab(this.app, this));
 	}
 
+	updateEverything(useCustomSolution: true, environment: Editor, options?: {updateMetadata: boolean}): void;
+	updateEverything(useCustomSolution: false, environment: TAbstractFile, options?: {updateMetadata: boolean}): void;
+	updateEverything(useCustomSolution: boolean, environment: Editor | TAbstractFile, options: {updateMetadata: boolean} = {updateMetadata: true}) {
+		const { updateMetadata } = options;
+		// Update status bar
+		if (true)
+		{
+			if (useCustomSolution && environment instanceof Editor) {
+				this.updateStatusBar(true, environment);
+			}
+			else if (!useCustomSolution && environment instanceof TAbstractFile) {
+				this.updateStatusBar(false, environment);
+			}
+		}
+		// Update metadata using either BOMS or cams
+		if (updateMetadata)
+		{
+			if (useCustomSolution && this.settings.useCustomFrontmatterHandlingSolution && environment instanceof Editor) {
+				// CAMS
+				this.updateUpdatedAt(environment);
+				if (this.settings.enableEditDurationKey)
+				{
+					this.updateEditDuration(environment);
+				}
+			}
+			else if (!useCustomSolution && !this.settings.useCustomFrontmatterHandlingSolution && environment instanceof TAbstractFile) {
+				// BOMS
+				this.standardUpdateModifiedKey(environment);
+				if (this.settings.enableEditDurationKey)
+				{
+					this.standardUpdateEditDuration(environment);
+				}
+			}
+		}
+	}
+
+
+	updateStatusBar(useCustomSolution: true, environment: Editor): void;
+	updateStatusBar(useCustomSolution: false, environment: TAbstractFile): void;
+	updateStatusBar(useCustomSolution: boolean, environment: Editor | TAbstractFile) {
+		// Update edit duration
+		if (useCustomSolution && environment instanceof Editor) {
+			this.setEditDurationBar(true, environment);
+		}
+		else if (!useCustomSolution && environment instanceof TAbstractFile)
+		{
+			this.setEditDurationBar(false, environment);
+		}
+		// Update clock (maybe not)
+	}
+
 	registerMouseDownDOMEvent() {
 		this.registerDomEvent(document, "mousedown", (evt: MouseEvent) => {
 			// Prepare everything
 
-			const activeView =
-				this.app.workspace.getActiveViewOfType(MarkdownView);
+			const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (activeView === null) {
 				return;
 			}
@@ -51,13 +102,7 @@ export default class TimeThings extends Plugin {
 				return;
 			}
 
-			// Change the duration icon in status bar
-
-			if (this.settings.useCustomFrontmatterHandlingSolution === true) {
-				if (this.settings.enableEditDurationKey) {
-					this.setEditDurationBar(true, editor);
-				}
-			}
+			this.updateEverything(true, editor, {updateMetadata: false});
 		});
 	}
 
@@ -78,9 +123,7 @@ export default class TimeThings extends Plugin {
 
 				// Change the duration icon in status bar
 
-				this.settings.enableEditDurationKey &&
-					this.settings.useCustomFrontmatterHandlingSolution &&
-					this.setEditDurationBar(true, editor);
+				this.updateEverything(true, editor, {updateMetadata: false});
 			}),
 		);
 	}
@@ -127,44 +170,39 @@ export default class TimeThings extends Plugin {
 					return;
 				}
 
-				// Update "updated_at"
+				// Update everything
 
-				const dateNow = moment();
-				const userDateFormat = this.settings.modifiedKeyFormat;
-				const dateFormatted = dateNow.format(userDateFormat);
-				const userModifiedKeyName = this.settings.modifiedKeyName;
-				const valueLineNumber = CAMS.getLine(
-					editor,
-					userModifiedKeyName,
-				);
-				if (typeof valueLineNumber !== "number") {
-					if (this.isDebugBuild) {
-						console.log("Not a number");
-					}
-					return;
-				}
-				const value = editor
-					.getLine(valueLineNumber)
-					.split(/:(.*)/s)[1]
-					.trim();
-				if (moment(value, userDateFormat, true).isValid() === false) {
-					// Little safecheck in place to reduce chance of bugs
-					if (this.isDebugBuild) {
-						console.log("Wrong format");
-					}
-					return;
-				}
-				CAMS.setValue(editor, userModifiedKeyName, dateFormatted);
-
-				// Update duration icon in status bar
-
-				if (this.settings.enableEditDurationKey) {
-					this.allowEditDurationUpdate &&
-						this.updateEditDuration(editor);
-					this.setEditDurationBar(true, editor);
-				}
+				this.updateEverything(true, editor);
 			}
 		});
+	}
+
+	updateUpdatedAt(editor: Editor) {
+		const dateNow = moment();
+		const userDateFormat = this.settings.modifiedKeyFormat;
+		const dateFormatted = dateNow.format(userDateFormat);
+
+		const userModifiedKeyName = this.settings.modifiedKeyName;
+		const valueLineNumber = CAMS.getLine(editor,userModifiedKeyName,);
+
+		if (typeof valueLineNumber !== "number") {
+			if (this.isDebugBuild) {
+				console.log("Not a number");
+			}
+			return;
+		}
+		const value = editor
+			.getLine(valueLineNumber)
+			.split(/:(.*)/s)[1]
+			.trim();
+		if (moment(value, userDateFormat, true).isValid() === false) {
+			// Little safecheck in place to reduce chance of bugs
+			if (this.isDebugBuild) {
+				console.log("Wrong format");
+			}
+			return;
+		}
+		CAMS.setValue(editor, userModifiedKeyName, dateFormatted);
 	}
 
 	registerFileModificationEvent() {
@@ -178,23 +216,10 @@ export default class TimeThings extends Plugin {
 					return;
 				}
 
-				if (
-					this.settings.useCustomFrontmatterHandlingSolution === false
-				) {
-					// If CAMS disabled
-
-					if (this.settings.enableEditDurationKey) {
-						// Update duration icon in status bar
-
-						this.allowEditDurationUpdate &&
-							this.standardUpdateEditDuration(file);
-						this.setEditDurationBar(false, file);
-					}
-					if (this.settings.enableModifiedKeyUpdate) {
-						// Update "updated_at"
-
-						this.standardUpdateModifiedKey(file);
-					}
+				// Main
+				if (this.settings.useCustomFrontmatterHandlingSolution === false)
+				{
+					this.updateEverything(false, file);
 				}
 			}),
 		);
@@ -236,10 +261,7 @@ export default class TimeThings extends Plugin {
 
 	setEditDurationBar(useCustomSolution: false, solution: TAbstractFile): void;
 	setEditDurationBar(useCustomSolution: true, solution: Editor): void;
-	async setEditDurationBar(
-		useCustomSolution: boolean,
-		solution: Editor | TAbstractFile,
-	) {
+	async setEditDurationBar(useCustomSolution: boolean, solution: Editor | TAbstractFile,) {
 		// what the hell is this monstrosity
 		let value = 0;
 		if (solution instanceof Editor) {
@@ -297,7 +319,9 @@ export default class TimeThings extends Plugin {
 
 	async updateEditDuration(editor: Editor) {
 		// Prepare everything
-
+		if (this.allowEditDurationUpdate === false) {
+			return;
+		}
 		this.allowEditDurationUpdate = false;
 		const fieldLine = CAMS.getLine(editor, this.settings.editDurationPath);
 		if (fieldLine === undefined) {
@@ -323,7 +347,10 @@ export default class TimeThings extends Plugin {
 
 	async standardUpdateEditDuration(file: TAbstractFile) {
 		// Prepare everything
-
+		if (this.allowEditDurationUpdate === false)
+		{
+			return;
+		}
 		this.allowEditDurationUpdate = false;
 		await this.app.fileManager.processFrontMatter(
 			file as TFile,

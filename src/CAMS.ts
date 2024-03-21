@@ -86,11 +86,7 @@ export function getLine(editor: Editor, fieldPath: string): number | undefined {
 	return undefined;
 }
 
-export function setValue(
-	editor: Editor,
-	fieldPath: string,
-	fieldValue: string,
-) {
+export function setValue(editor: Editor, fieldPath: string, fieldValue: string,) {
 	// The thing with this function is that it uses the format from settings to check against. I can make it as an argument that can be passed, or better yet, eradicate the check from the function to make it more atomic and place it somewhere else in the main code.
 	const fieldLine = getLine(editor, fieldPath);
 	if (fieldLine === undefined) {
