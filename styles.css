@@ -6,3 +6,46 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.tt-top
+{
+    position: absolute;
+    background-color: beige;
+    padding: 15px;
+    border-radius: 15px;
+}
+
+.tt-wrapper
+{
+    display: flex;
+    flex-direction: column;
+    margin-top: 150px;
+}
+
+.tt-fire
+{
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    width: 100%;
+    padding: 10px;
+    justify-content: space-between;
+    border-radius: 25px;
+}
+.tt-fire:hover
+{
+    background-color: blanchedalmond;
+}
+.tt-left-element
+{
+    display: flex;
+    font-weight: bold;
+}
+.tt-right-element
+{
+    display: flex;
+    justify-content: flex-end;
+    max-width: 100px;
+    max-height: 100%;
+    overflow: hidden;
+}

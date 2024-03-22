@@ -1,8 +1,10 @@
 import { Editor, MarkdownView, Plugin, TAbstractFile, TFile, Tasks } from "obsidian";
 import { moment } from "obsidian";
+import { ExampleView, VIEW_TYPE_EXAMPLE } from "./lastedited.view";
 
 import * as BOMS from "./BOMS";
 import * as CAMS from "./CAMS";
+import * as filesUtils from "./files.utils";
 import {
 	DEFAULT_SETTINGS,
 	TimeThingsSettings,
@@ -21,6 +23,17 @@ export default class TimeThings extends Plugin {
 	isProccessing = false;
 
 	async onload() {
+		this.registerView(
+			VIEW_TYPE_EXAMPLE,
+			(leaf) => new ExampleView(leaf)
+		);
+		this.addRibbonIcon("dice", "Activate view", () => {
+			this.activateView();
+		});
+		this.addRibbonIcon("dice", "Run the new command", () => {
+			filesUtils.getFilesWithField("updated_at");
+		});
+
 		await this.loadSettings();
 
 		// Variables initialization
@@ -38,10 +51,35 @@ export default class TimeThings extends Plugin {
 		this.addSettingTab(new TimeThingsSettingsTab(this.app, this));
 	}
 
-	updateEverything(useCustomSolution: true, environment: Editor, options?: {updateMetadata: boolean}): void;
-	updateEverything(useCustomSolution: false, environment: TAbstractFile, options?: {updateMetadata: boolean}): void;
-	updateEverything(useCustomSolution: boolean, environment: Editor | TAbstractFile, options: {updateMetadata: boolean} = {updateMetadata: true}) {
+	async activateView() {
+		const { workspace } = this.app;
+	
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
+	
+		if (leaves.length > 0) {
+			// A leaf with our view already exists, use that
+			leaf = leaves[0];
+		} else {
+			// Our view could not be found in the workspace, create a new leaf
+			// in the right sidebar for it
+			leaf = workspace.getRightLeaf(false);
+			await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+		}
+	
+		// "Reveal" the leaf in case it is in a collapsed sidebar
+		workspace.revealLeaf(leaf);
+	}
+
+	updateOnUserActivity(useCustomSolution: true, environment: Editor, options?: {updateMetadata: boolean}): void;
+	updateOnUserActivity(useCustomSolution: false, environment: TAbstractFile, options?: {updateMetadata: boolean}): void;
+	updateOnUserActivity(useCustomSolution: boolean, environment: Editor | TAbstractFile, options: {updateMetadata: boolean} = {updateMetadata: true}) {
 		const { updateMetadata } = options;
+
+		// Check if the file is in the blacklisted folder
+		// Check if the file has a property that puts it into a blacklist
+		// Check if the file itself is in the blacklist
+
 		// Update status bar
 		if (true)
 		{
@@ -102,7 +140,7 @@ export default class TimeThings extends Plugin {
 				return;
 			}
 
-			this.updateEverything(true, editor, {updateMetadata: false});
+			this.updateOnUserActivity(true, editor, {updateMetadata: false});
 		});
 	}
 
@@ -123,7 +161,7 @@ export default class TimeThings extends Plugin {
 
 				// Change the duration icon in status bar
 
-				this.updateEverything(true, editor, {updateMetadata: false});
+				this.updateOnUserActivity(true, editor, {updateMetadata: false});
 			}),
 		);
 	}
@@ -172,7 +210,7 @@ export default class TimeThings extends Plugin {
 
 				// Update everything
 
-				this.updateEverything(true, editor);
+				this.updateOnUserActivity(true, editor);
 			}
 		});
 	}
@@ -219,7 +257,7 @@ export default class TimeThings extends Plugin {
 				// Main
 				if (this.settings.useCustomFrontmatterHandlingSolution === false)
 				{
-					this.updateEverything(false, file);
+					this.updateOnUserActivity(false, file);
 				}
 			}),
 		);
