@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Plugin, TAbstractFile, TFile, Tasks } from "obsidian";
+import { Editor, MarkdownView, WorkspaceLeaf, Plugin, TAbstractFile, TFile, } from "obsidian";
 import { moment } from "obsidian";
 import { ExampleView, VIEW_TYPE_EXAMPLE } from "./lastedited.view";
 
@@ -11,7 +11,6 @@ import {
 	TimeThingsSettingsTab,
 } from "./settings";
 import * as timeUtils from "./time.utils";
-import { env } from "process";
 
 export default class TimeThings extends Plugin {
 	settings: TimeThingsSettings;

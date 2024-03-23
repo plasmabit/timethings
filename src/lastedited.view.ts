@@ -50,17 +50,18 @@ export class ExampleView extends ItemView {
     // Sort the hashmap
     fileEditedSecondsMap.sort((a, b) => b.value - a.value);
     //
-    const ttTop = container.createEl("div", {cls: "tt-top"});
+    const ttTop = container.createEl("div", {});
     ttTop.appendChild(container.createEl("h2", { text: "Most edited notes" }));
     ttTop.appendChild(container.createEl("p", { text: "Total time spent editing: " + calcUtils.formatTime(totalSeconds) }));
     // Display the items
     const wrapper = container.createEl("div", {cls: "tt-wrapper"});
     for (const entry of fileEditedSecondsMap) {
+      // Set up
       const file = entry.file;
       const editedSeconds = entry.value;
-      const oneFileTitle = wrapper.appendChild(container.createEl("div", { cls: "tt-fire" } ));
-      oneFileTitle.appendChild(createEl("div", { text: file.basename, cls: "tt-left-element" }));
-      oneFileTitle.appendChild(createEl("div", { text: calcUtils.formatTime(editedSeconds), cls: "tt-right-element" }));
+      const oneFileTitle = wrapper.appendChild(container.createEl("div", { cls: "tree-item-self is-clickable nav-file-title tt-title" } ));
+      oneFileTitle.appendChild(createEl("div", { text: file.basename, cls: "tree-item-inner nav-file-title-content tt-title-content" }));
+      oneFileTitle.appendChild(createEl("div", { text: calcUtils.formatTime(editedSeconds), cls: "flexblock" }));
       oneFileTitle.addEventListener('mouseover', (event: MouseEvent) => {
           this.app.workspace.trigger('hover-link', {
               event,
