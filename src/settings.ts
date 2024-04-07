@@ -2,33 +2,36 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 import TimeThings from "./main";
 
 export interface TimeThingsSettings {
+    //CAMS
 	useCustomFrontmatterHandlingSolution: boolean;
 
+    //EMOJIS
 	showEmojiStatusBar: boolean;
 
+    //CLOCK
 	clockFormat: string;
 	updateIntervalMilliseconds: string;
 	enableClock: boolean;
 	isUTC: boolean;
 
+    //MODIFIED KEY
 	modifiedKeyName: string;
 	modifiedKeyFormat: string;
 	enableModifiedKeyUpdate: boolean;
-
-	editDurationPath: string;
-	enableEditDurationKey: boolean;
-
+    //BOMS
 	updateIntervalFrontmatterMinutes: number;
 
+    //DURATION KEY
+	editDurationPath: string;
+	enableEditDurationKey: boolean;
 	nonTypingEditingTimePercentage: number;
 
 	enableSwitch: boolean;
 	switchKey: string;
 	switchKeyValue: string;
 
-	enableCyclesKey: boolean;
-	editedCyclesKey: string;
-	cycleDurationMinutes: number;
+
+    
 }
 
 export const DEFAULT_SETTINGS: TimeThingsSettings = {
@@ -56,9 +59,7 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	switchKey: "timethings.switch",
 	switchKeyValue: "true",
 
-	enableCyclesKey: true,
-	editedCyclesKey: "updated_days",
-	cycleDurationMinutes: 1440,
+
 };
 
 export class TimeThingsSettingsTab extends PluginSettingTab {
@@ -94,7 +95,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Use custom frontmatter handling solution")
 			.setDesc(
-				"Smoother experiene. Prone to bugs if you use a nested value.",
+				"Smoother experience. Prone to bugs if you use a nested value.",
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -116,9 +117,9 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 
 		containerEl.createEl("h1", { text: "Status bar" });
 		containerEl.createEl("p", {
-			text: "Displays clock and duration edited in the status bar",
+			text: "Displays clock in the status bar",
 		});
-
+        containerEl.createEl("h2", { text: "🕰️ Clock" });
 		new Setting(containerEl)
 			.setName("Enable emojis")
 			.setDesc("Show emojis in the status bar?")
@@ -335,73 +336,6 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 						})
 						.setDynamicTooltip(),
 				);
-		}
-
-		// #endregion
-
-		// #region edited_cycles
-
-		containerEl.createEl("h2", { text: "🔑 Edited cycles" });
-		containerEl.createEl("p", {
-			text: "Track for how often you edit a note.",
-		});
-
-		new Setting(containerEl)
-			.setName("Enable edited cycles key")
-			.setDesc("")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.enableCyclesKey)
-					.onChange(async (newValue) => {
-						this.plugin.settings.enableCyclesKey = newValue;
-						await this.plugin.saveSettings();
-						await this.display();
-					}),
-			);
-
-		if (this.plugin.settings.enableCyclesKey === true) {
-			new Setting(containerEl)
-				.setName("Edit cycles key name")
-				.setDesc(
-					"Supports nested keys. For example `timethings.updated_days`",
-				)
-				.addText((text) =>
-					text
-						.setPlaceholder("edited_seconds")
-						.setValue(this.plugin.settings.editedCyclesKey)
-						.onChange(async (value) => {
-							this.plugin.settings.editedCyclesKey = value;
-							await this.plugin.saveSettings();
-						}),
-				);
-
-			const options: Record<number, string> = {
-				10 : "Every 10 minutes",
-				1440 : "Every day",
-				43800 : "Every month",
-				131400 : "Every 3 months",
-				525600 : "Annualy",
-			};
-
-
-
-			new Setting(containerEl)
-				.setName('Reset the cycle duration. Currently: ' + options[this.plugin.settings.cycleDurationMinutes])
-				.setDesc('The counter will not go up if your last note update was within this timeframe')
-				.addDropdown((dropdown) => {
-					dropdown.addOption("10", "Every 10 minutes");
-					dropdown.addOption("1440", "Every day");
-					dropdown.addOption("43800", "Every month");
-					dropdown.addOption("131400", "Every 3 months");
-					dropdown.addOption("525600", "Annualy");
-
-					dropdown.setValue("Every 20 minutes");
-
-					dropdown.onChange(async (value) => {
-						this.plugin.settings.cycleDurationMinutes = +value;
-						await this.plugin.saveSettings();
-					});
-				});
 		}
 
 		// #endregion

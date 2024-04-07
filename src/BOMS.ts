@@ -1,6 +1,7 @@
-export function getValue(obj: any, fieldPath: string) {
+export function getValue(frontmatter: any, fieldPath: string) {
+    // Prepare everything
 	const keys = fieldPath.split(".");
-	let value = obj;
+	let value = frontmatter;
 
 	for (const key of keys) {
 		value = value[key];
@@ -12,9 +13,9 @@ export function getValue(obj: any, fieldPath: string) {
 	return value;
 }
 
-export function setValue(obj: any, path: string, value: any) {
-	const keys = path.split(".");
-	let currentLevel = obj;
+export function setValue(frontmatter: any, fieldPath: string, value: any) {
+	const keys = fieldPath.split(".");
+	let currentLevel = frontmatter;
 
 	for (let i = 0; i < keys.length - 1; i++) {
 		const key = keys[i];

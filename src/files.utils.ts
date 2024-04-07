@@ -19,3 +19,8 @@ export function getFilesWithField(fieldName: string) : TFile []
     }
     return filesWithField;
 }
+
+export function getFullPath(file: TFile): string
+{
+    return "hello";
+}

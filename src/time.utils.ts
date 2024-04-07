@@ -1,4 +1,6 @@
 import { moment } from "obsidian";
+import momentDurationFormatSetup from "moment-duration-format";
+momentDurationFormatSetup(moment);
 
 export function momentToClockEmoji(time: moment.Moment): string {
 	const hour = time.hour();
@@ -25,4 +27,10 @@ export function momentToClockEmoji(time: moment.Moment): string {
 
 	const result: string = clockEmojiMap[hour12] || "⏰"; // Default emoji for unknown hours
 	return result;
+}
+
+export function formatSeconds(seconds: number, format: string): string {
+    const durationSeconds = moment.duration(seconds, 'seconds');
+    const formattedTime = durationSeconds.format(format);
+    return formattedTime;
 }
