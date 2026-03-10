@@ -69,6 +69,7 @@ export class MetadataUpdateService {
 			editor,
 			settings.modifiedKeyName,
 			moment().format(settings.modifiedKeyFormat),
+			{ addToHistory: false },
 		);
 	}
 
@@ -163,6 +164,7 @@ export class MetadataUpdateService {
 				editor,
 				settings.editDurationPath,
 				nextValue.toString(),
+				{ addToHistory: false },
 			);
 
 			await delay(

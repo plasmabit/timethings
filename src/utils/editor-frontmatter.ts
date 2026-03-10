@@ -1,4 +1,13 @@
+import { Transaction } from "@codemirror/state";
 import { Editor } from "obsidian";
+
+interface SetFrontmatterFieldValueOptions {
+	addToHistory?: boolean;
+}
+
+interface EditorViewLike {
+	dispatch: (transaction: unknown) => void;
+}
 
 export function hasFrontmatter(editor: Editor): boolean {
 	if (editor.getLine(0) !== "---") {
@@ -100,6 +109,7 @@ export function setFrontmatterFieldValue(
 	editor: Editor,
 	fieldPath: string,
 	fieldValue: string,
+	options: SetFrontmatterFieldValueOptions = {},
 ) {
 	const fieldLine = findFrontmatterFieldLine(editor, fieldPath);
 
@@ -107,10 +117,64 @@ export function setFrontmatterFieldValue(
 		return;
 	}
 
-	const fieldName = editor.getLine(fieldLine).split(":", 1)[0];
-	editor.setLine(fieldLine, `${fieldName}: ${fieldValue}`);
+	const currentLine = editor.getLine(fieldLine);
+	const fieldName = currentLine.split(":", 1)[0];
+	const nextLine = `${fieldName}: ${fieldValue}`;
+
+	if (
+		options.addToHistory === false &&
+		replaceEditorLineWithoutHistory(editor, fieldLine, currentLine, nextLine)
+	) {
+		return;
+	}
+
+	editor.setLine(fieldLine, nextLine);
 }
 
 function isLineIndented(line: string): boolean {
 	return /^[\s\t]/.test(line);
+}
+
+function replaceEditorLineWithoutHistory(
+	editor: Editor,
+	lineNumber: number,
+	currentLine: string,
+	nextLine: string,
+): boolean {
+	const editorView = getEditorView(editor);
+
+	if (editorView === undefined) {
+		return false;
+	}
+
+	const from = editor.posToOffset({ line: lineNumber, ch: 0 });
+	const to = editor.posToOffset({
+		line: lineNumber,
+		ch: currentLine.length,
+	});
+
+	editorView.dispatch({
+		changes: {
+			from,
+			to,
+			insert: nextLine,
+		},
+		annotations: [Transaction.addToHistory.of(false)],
+	});
+
+	return true;
+}
+
+function getEditorView(editor: Editor): EditorViewLike | undefined {
+	const editorWithView = editor as Editor & {
+		cm?: EditorViewLike;
+	};
+
+	if (editorWithView.cm === undefined) {
+		return undefined;
+	}
+
+	return typeof editorWithView.cm.dispatch === "function"
+		? editorWithView.cm
+		: undefined;
 }
