@@ -1,0 +1,27 @@
+/*
+
+This CSS file will be included with your plugin, and
+available in the app when your plugin is enabled.
+
+If your plugin does not need CSS, delete this file.
+
+*/
+
+.tt-title
+{
+    justify-content: space-between;
+    align-items: unset;
+}
+
+.tt-title-content
+{
+    flex-grow: 1;
+}
+
+.flexblock
+{
+    overflow: hidden;
+    width: 100px;
+    max-height: 1rem;
+    text-align: end;
+}

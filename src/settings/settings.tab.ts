@@ -1,5 +1,10 @@
-import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { App, Plugin, PluginSettingTab, SearchComponent, Setting } from "obsidian";
 import { SETTINGS_LINKS } from "../constants/plugin.constants";
+import {
+	normalizeIgnorePath,
+} from "../utils/ignore-rules";
+import { FileInputSuggest } from "./suggesters/file-input-suggest";
+import { FolderInputSuggest } from "./suggesters/folder-input-suggest";
 import {
 	TimeThingsSettings,
 	TimeThingsSettingsManager,
@@ -43,7 +48,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 
 	private renderStatusBarSection(containerEl: HTMLElement) {
 		this.createSection(containerEl, "Status bar", "Displays clock in the status bar");
-		containerEl.createEl("h2", { text: "🕰️ Clock" });
+		this.createSubsectionTitle(containerEl, "🕰️ Clock");
 
 		this.addToggleSetting(
 			containerEl,
@@ -108,10 +113,11 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		);
 		this.renderModifiedKeySection(containerEl);
 		this.renderEditDurationSection(containerEl);
+		this.renderIgnoreSection(containerEl);
 	}
 
 	private renderModifiedKeySection(containerEl: HTMLElement) {
-		containerEl.createEl("h2", { text: "🔑 Modified timestamp" });
+		this.createSubsectionTitle(containerEl, "🔑 Modified timestamp");
 
 		this.addToggleSetting(
 			containerEl,
@@ -169,7 +175,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 	}
 
 	private renderEditDurationSection(containerEl: HTMLElement) {
-		containerEl.createEl("h2", { text: "🔑 Edited duration" });
+		this.createSubsectionTitle(containerEl, "🔑 Edited duration");
 		containerEl.createEl("p", {
 			text: "Track for how long you have been editing a note.",
 		});
@@ -231,13 +237,52 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			);
 	}
 
+	private renderIgnoreSection(containerEl: HTMLElement) {
+		this.createSubsectionTitle(containerEl, "Ignored paths");
+		containerEl.createEl("p", {
+			text: "Files and folders listed here will be ignored by metadata updates and the Most edited view.",
+		});
+
+		this.renderPathListSetting(
+			containerEl,
+			"Ignored folders",
+			"Any file in these folders will be ignored.",
+			"Example: Templates",
+			this.plugin.settings.ignoredFolders,
+			(inputEl) => new FolderInputSuggest(this.app, inputEl),
+			async (value) => {
+				await this.updateSetting("ignoredFolders", value);
+			},
+		);
+
+		this.renderPathListSetting(
+			containerEl,
+			"Ignored files",
+			"These exact files will be ignored.",
+			"Example: Templates/Daily.md",
+			this.plugin.settings.ignoredFiles,
+			(inputEl) => new FileInputSuggest(this.app, inputEl),
+			async (value) => {
+				await this.updateSetting("ignoredFiles", value);
+			},
+		);
+	}
+
 	private createSection(
 		containerEl: HTMLElement,
 		title: string,
 		description: string,
 	) {
-		containerEl.createEl("h2", { text: title });
+		const titleElement = containerEl.createEl("p");
+
+		titleElement.createEl("strong", { text: title });
 		containerEl.createEl("p", { text: description });
+	}
+
+	private createSubsectionTitle(containerEl: HTMLElement, title: string) {
+		const titleElement = containerEl.createEl("p");
+
+		titleElement.createEl("strong", { text: title });
 	}
 
 	private createMomentFormatLink() {
@@ -301,6 +346,58 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 						await onChange(newValue);
 					}),
 			);
+	}
+
+	private renderPathListSetting(
+		containerEl: HTMLElement,
+		name: string,
+		description: string | DocumentFragment,
+		placeholder: string,
+		currentValues: string[],
+		attachSuggest: (inputEl: HTMLInputElement) => void,
+		onChange: (value: string[]) => Promise<void>,
+	) {
+		let searchComponent: SearchComponent | undefined;
+
+		new Setting(containerEl)
+			.setName(name)
+			.setDesc(description)
+			.addSearch((search) => {
+				searchComponent = search;
+				search.setPlaceholder(placeholder);
+				attachSuggest(search.inputEl);
+			})
+			.addButton((button) =>
+				button.setIcon("plus").setTooltip("Add").onClick(async () => {
+					const rawValue = searchComponent?.getValue().trim();
+
+					if (!rawValue) {
+						return;
+					}
+
+					const normalizedValue = normalizeIgnorePath(rawValue);
+					const nextValues = Array.from(
+						new Set([...currentValues, normalizedValue]),
+					);
+
+					await onChange(nextValues);
+					searchComponent?.setValue("");
+					this.display();
+				}),
+			);
+
+		for (const currentValue of currentValues) {
+			new Setting(containerEl)
+				.setName(currentValue)
+				.addButton((button) =>
+					button.setButtonText("Remove").onClick(async () => {
+						await onChange(
+							currentValues.filter((value) => value !== currentValue),
+						);
+						this.display();
+					}),
+				);
+		}
 	}
 
 	private addSliderSetting(

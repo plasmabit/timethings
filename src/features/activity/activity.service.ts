@@ -44,11 +44,18 @@ export class ActivityService {
 			}
 
 			const activeView = this.host.app.workspace.getActiveViewOfType(MarkdownView);
-			if (activeView === null || !activeView.editor.hasFocus()) {
+			if (
+				activeView === null ||
+				activeView.file === null ||
+				!activeView.editor.hasFocus()
+			) {
 				return;
 			}
 
-			void this.metadataUpdateService.updateEditorMetadata(activeView.editor);
+			void this.metadataUpdateService.updateEditorMetadata(
+				activeView.file,
+				activeView.editor,
+			);
 		});
 	}
 

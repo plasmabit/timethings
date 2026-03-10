@@ -14,6 +14,8 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	enableEditDurationKey: true,
 	updateIntervalFrontmatterMinutes: 1,
 	nonTypingEditingTimePercentage: 22,
+	ignoredFolders: [],
+	ignoredFiles: [],
 	enableSwitch: false,
 	switchKey: "timethings.switch",
 	switchKeyValue: "true",

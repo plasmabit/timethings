@@ -10,6 +10,7 @@ import {
 	getNestedFrontmatterValue,
 	setNestedFrontmatterValue,
 } from "../../utils/frontmatter-path";
+import { isFileIgnored } from "../../utils/ignore-rules";
 
 type SettingsAccessor = () => TimeThingsSettings;
 
@@ -21,7 +22,11 @@ export class MetadataUpdateService {
 		private readonly getSettings: SettingsAccessor,
 	) {}
 
-	async updateEditorMetadata(editor: Editor) {
+	async updateEditorMetadata(file: TFile, editor: Editor) {
+		if (isFileIgnored(file, this.getSettings())) {
+			return;
+		}
+
 		this.updateModifiedTimestampInEditor(editor);
 
 		if (this.getSettings().enableEditDurationKey) {
@@ -30,6 +35,10 @@ export class MetadataUpdateService {
 	}
 
 	async updateFileMetadata(file: TFile) {
+		if (isFileIgnored(file, this.getSettings())) {
+			return;
+		}
+
 		await this.updateModifiedTimestampInFrontmatter(file);
 
 		if (this.getSettings().enableEditDurationKey) {

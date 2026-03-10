@@ -6,13 +6,14 @@ import {
 	WORKSPACE_EVENTS,
 	WORKSPACE_LEAF_TYPES,
 } from "../../constants/plugin.constants";
+import { TimeThingsSettings } from "../../settings/settings.types";
 import { formatSeconds } from "../../utils/time-format";
 import { MostEditedEntry, MostEditedService } from "./most-edited.service";
 
 export class MostEditedView extends ItemView {
 	constructor(
 		leaf: WorkspaceLeaf,
-		private readonly getEditedSecondsPath: () => string,
+		private readonly getSettings: () => TimeThingsSettings,
 	) {
 		super(leaf);
 	}
@@ -33,8 +34,11 @@ export class MostEditedView extends ItemView {
 
 	private renderView() {
 		const service = new MostEditedService(this.app);
+		const settings = this.getSettings();
 		const entries = service.getMostEditedEntries(
-			this.getEditedSecondsPath(),
+			settings.editDurationPath,
+			settings.ignoredFolders,
+			settings.ignoredFiles,
 		);
 		const totalEditedSeconds = service.getTotalEditedSeconds(entries);
 

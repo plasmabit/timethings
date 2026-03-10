@@ -4,6 +4,7 @@ import {
 	MOST_EDITED_VIEW,
 } from "../../constants/plugin.constants";
 import { getNestedFrontmatterValue } from "../../utils/frontmatter-path";
+import { isFileIgnored } from "../../utils/ignore-rules";
 
 export interface MostEditedEntry {
 	file: TFile;
@@ -15,10 +16,16 @@ export class MostEditedService {
 
 	getMostEditedEntries(
 		fieldName: string = FRONTMATTER_FIELDS.editedSeconds,
+		ignoredFolders: string[] = [],
+		ignoredFiles: string[] = [],
 	): MostEditedEntry[] {
 		const entries: MostEditedEntry[] = [];
 
 		for (const file of this.app.vault.getMarkdownFiles()) {
+			if (isFileIgnored(file, { ignoredFolders, ignoredFiles })) {
+				continue;
+			}
+
 			const editedSeconds = this.getEditedSeconds(file, fieldName);
 
 			if (

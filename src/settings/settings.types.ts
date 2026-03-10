@@ -12,6 +12,8 @@ export interface TimeThingsSettings {
 	editDurationPath: string;
 	enableEditDurationKey: boolean;
 	nonTypingEditingTimePercentage: number;
+	ignoredFolders: string[];
+	ignoredFiles: string[];
 	enableSwitch: boolean;
 	switchKey: string;
 	switchKeyValue: string;
