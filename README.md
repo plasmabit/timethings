@@ -44,8 +44,8 @@ I may improve it further in the future, but for that I feel like I'd have to wri
 
 ## What's next
 
-- [ ] Ignore files in specified folders
+- [x] Ignore files in specified folders
+- [x] Track time spent editing a note
 - [ ] Ingore files with specified frontmatter keys (and their values)
 - [ ] Pick a timezone for all things globally
 - [ ] Pick a timezone for clock and frontmatter seperately
-- [x] Track time spent editing a note
