@@ -10,6 +10,13 @@ import { formatSeconds } from "../../utils/time-format";
 import { MostEditedEntry, MostEditedService } from "./most-edited.service";
 
 export class MostEditedView extends ItemView {
+	constructor(
+		leaf: WorkspaceLeaf,
+		private readonly getEditedSecondsPath: () => string,
+	) {
+		super(leaf);
+	}
+
 	getViewType() {
 		return VIEW_TYPES.mostEdited;
 	}
@@ -26,7 +33,9 @@ export class MostEditedView extends ItemView {
 
 	private renderView() {
 		const service = new MostEditedService(this.app);
-		const entries = service.getMostEditedEntries();
+		const entries = service.getMostEditedEntries(
+			this.getEditedSecondsPath(),
+		);
 		const totalEditedSeconds = service.getTotalEditedSeconds(entries);
 
 		this.contentEl.empty();
@@ -95,11 +104,22 @@ export class MostEditedView extends ItemView {
 	}
 
 	private async openFile(file: TFile) {
-		const markdownLeaf =
-			this.app.workspace.getLeavesOfType(WORKSPACE_LEAF_TYPES.markdown)[0];
+		const targetLeaf = this.getTargetLeaf();
 
-		if (markdownLeaf instanceof WorkspaceLeaf) {
-			await markdownLeaf.openFile(file);
+		await targetLeaf.openFile(file);
+		this.app.workspace.setActiveLeaf(targetLeaf, { focus: true });
+		this.app.workspace.revealLeaf(targetLeaf);
+	}
+
+	private getTargetLeaf(): WorkspaceLeaf {
+		const existingMarkdownLeaf = this.app.workspace
+			.getLeavesOfType(WORKSPACE_LEAF_TYPES.markdown)
+			.find((leaf) => leaf !== this.leaf);
+
+		if (existingMarkdownLeaf instanceof WorkspaceLeaf) {
+			return existingMarkdownLeaf;
 		}
+
+		return this.app.workspace.getLeaf(false);
 	}
 }

@@ -3,6 +3,7 @@ import {
 	FRONTMATTER_FIELDS,
 	MOST_EDITED_VIEW,
 } from "../../constants/plugin.constants";
+import { getNestedFrontmatterValue } from "../../utils/frontmatter-path";
 
 export interface MostEditedEntry {
 	file: TFile;
@@ -13,7 +14,7 @@ export class MostEditedService {
 	constructor(private readonly app: App) {}
 
 	getMostEditedEntries(
-		fieldName = FRONTMATTER_FIELDS.editedSeconds,
+		fieldName: string = FRONTMATTER_FIELDS.editedSeconds,
 	): MostEditedEntry[] {
 		const entries: MostEditedEntry[] = [];
 
@@ -41,7 +42,12 @@ export class MostEditedService {
 
 	private getEditedSeconds(file: TFile, fieldName: string): number | undefined {
 		const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-		const value = frontmatter?.[fieldName];
+
+		if (frontmatter === undefined) {
+			return undefined;
+		}
+
+		const value = getNestedFrontmatterValue(frontmatter, fieldName);
 
 		if (typeof value === "number") {
 			return value;

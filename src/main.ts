@@ -56,7 +56,8 @@ export default class TimeThings extends Plugin {
 	private registerViews() {
 		this.registerView(
 			VIEW_TYPES.mostEdited,
-			(leaf) => new MostEditedView(leaf),
+			(leaf) =>
+				new MostEditedView(leaf, () => this.settings.editDurationPath),
 		);
 	}
 
