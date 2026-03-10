@@ -236,7 +236,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		title: string,
 		description: string,
 	) {
-		containerEl.createEl("h1", { text: title });
+		containerEl.createEl("h2", { text: title });
 		containerEl.createEl("p", { text: description });
 	}
 
