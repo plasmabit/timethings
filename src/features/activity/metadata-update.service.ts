@@ -27,7 +27,9 @@ export class MetadataUpdateService {
 			return;
 		}
 
-		this.updateModifiedTimestampInEditor(editor);
+		if (this.getSettings().enableModifiedKeyUpdate) {
+			this.updateModifiedTimestampInEditor(editor);
+		}
 
 		if (this.getSettings().enableEditDurationKey) {
 			await this.updateEditDurationInEditor(editor);
@@ -39,7 +41,9 @@ export class MetadataUpdateService {
 			return;
 		}
 
-		await this.updateModifiedTimestampInFrontmatter(file);
+		if (this.getSettings().enableModifiedKeyUpdate) {
+			await this.updateModifiedTimestampInFrontmatter(file);
+		}
 
 		if (this.getSettings().enableEditDurationKey) {
 			await this.updateEditDurationInFrontmatter(file);
