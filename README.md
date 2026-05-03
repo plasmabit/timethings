@@ -10,7 +10,7 @@ This plugin uses moment.js. It's a time manipulation library that is already inc
 
 ![image](https://github.com/DynamicPlayerSector/timethings/assets/65742767/c2b4c4e0-002b-43ea-8b94-6860d6f7c703)
 
-- Option to change the date format. Recommended: `HH:MM:ss` and `hh:mm A`.
+- Option to change the date format. Recommended: `HH:mm:ss` and `hh:mm A`.
 - Option to change update interval.
 - Option to use UTC timezone.
 

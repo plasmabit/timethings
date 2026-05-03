@@ -27,6 +27,17 @@ export function formatMomentAsClockEmoji(time: moment.Moment): string {
 	return CLOCK_EMOJI_BY_HOUR[hour12] || "⏰";
 }
 
+export function formatMomentAsClock(time: moment.Moment, format: string): string {
+	return time.format(normalizeClockFormat(format));
+}
+
 export function formatSeconds(seconds: number, format: string): string {
 	return moment.duration(seconds, "seconds").format(format);
+}
+
+function normalizeClockFormat(format: string): string {
+	return format.replace(
+		/(^|[^A-Za-z])((?:H{1,2}|h{1,2}):)MM(?=$|[^A-Za-z])/g,
+		"$1$2mm",
+	);
 }
