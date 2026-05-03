@@ -1,7 +1,10 @@
 import { moment } from "obsidian";
 import momentDurationFormatSetup from "moment-duration-format";
 
+// #20
+const initialLocale = moment.locale();
 momentDurationFormatSetup(moment);
+moment.locale(initialLocale);
 
 const CLOCK_EMOJI_BY_HOUR: Record<number, string> = {
 	1: "🕐",
