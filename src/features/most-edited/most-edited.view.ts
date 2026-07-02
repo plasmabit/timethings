@@ -50,9 +50,7 @@ export class MostEditedView extends ItemView {
 	private renderHeader(totalEditedSeconds: number) {
 		const header = this.contentEl.createEl("div");
 
-		header.appendChild(
-			this.contentEl.createEl("h2", { text: MOST_EDITED_VIEW.title }),
-		);
+		header.appendChild(this.contentEl.createEl("h2", { text: MOST_EDITED_VIEW.title }));
 		header.appendChild(
 			this.contentEl.createEl("p", {
 				text:
@@ -85,10 +83,7 @@ export class MostEditedView extends ItemView {
 		);
 		row.appendChild(
 			createEl("div", {
-				text: formatSeconds(
-					entry.editedSeconds,
-					MOST_EDITED_VIEW.durationFormat,
-				),
+				text: formatSeconds(entry.editedSeconds, MOST_EDITED_VIEW.durationFormat),
 				cls: MOST_EDITED_VIEW_CLASSES.value,
 			}),
 		);

@@ -37,10 +37,7 @@ export function findFrontmatterEndLine(editor: Editor): number | undefined {
 	return undefined;
 }
 
-export function findFrontmatterFieldLine(
-	editor: Editor,
-	fieldPath: string,
-): number | undefined {
+export function findFrontmatterFieldLine(editor: Editor, fieldPath: string): number | undefined {
 	const endLine = findFrontmatterEndLine(editor);
 	const keys = fieldPath.split(".");
 
@@ -174,7 +171,5 @@ function getEditorView(editor: Editor): EditorViewLike | undefined {
 		return undefined;
 	}
 
-	return typeof editorWithView.cm.dispatch === "function"
-		? editorWithView.cm
-		: undefined;
+	return typeof editorWithView.cm.dispatch === "function" ? editorWithView.cm : undefined;
 }

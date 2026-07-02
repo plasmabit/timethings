@@ -6,10 +6,7 @@ import {
 	readFrontmatterFieldValueAtLine,
 	setFrontmatterFieldValue,
 } from "../../utils/editor-frontmatter";
-import {
-	getNestedFrontmatterValue,
-	setNestedFrontmatterValue,
-} from "../../utils/frontmatter-path";
+import { getNestedFrontmatterValue, setNestedFrontmatterValue } from "../../utils/frontmatter-path";
 import { isFileIgnored } from "../../utils/ignore-rules";
 
 type SettingsAccessor = () => TimeThingsSettings;
@@ -52,10 +49,7 @@ export class MetadataUpdateService {
 
 	private updateModifiedTimestampInEditor(editor: Editor) {
 		const settings = this.getSettings();
-		const lineNumber = findFrontmatterFieldLine(
-			editor,
-			settings.modifiedKeyName,
-		);
+		const lineNumber = findFrontmatterFieldLine(editor, settings.modifiedKeyName);
 
 		if (lineNumber === undefined) {
 			return;
@@ -81,10 +75,7 @@ export class MetadataUpdateService {
 		const settings = this.getSettings();
 
 		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-			const currentValue = getNestedFrontmatterValue(
-				frontmatter,
-				settings.modifiedKeyName,
-			);
+			const currentValue = getNestedFrontmatterValue(frontmatter, settings.modifiedKeyName);
 			const now = moment();
 			const nextAllowedUpdate = moment(
 				typeof currentValue === "string" ? currentValue : undefined,
@@ -123,8 +114,7 @@ export class MetadataUpdateService {
 					this.getSettings().editDurationPath,
 				);
 				const nextValue =
-					toNumber(currentValue) +
-					COOLDOWN_DURATIONS.frontmatterIncrementSeconds;
+					toNumber(currentValue) + COOLDOWN_DURATIONS.frontmatterIncrementSeconds;
 
 				setNestedFrontmatterValue(
 					frontmatter,
@@ -151,25 +141,18 @@ export class MetadataUpdateService {
 
 		try {
 			const settings = this.getSettings();
-			const lineNumber = findFrontmatterFieldLine(
-				editor,
-				settings.editDurationPath,
-			);
+			const lineNumber = findFrontmatterFieldLine(editor, settings.editDurationPath);
 
 			if (lineNumber === undefined) {
 				return;
 			}
 
 			const currentValue = readFrontmatterFieldValueAtLine(editor, lineNumber);
-			const nextValue =
-				toNumber(currentValue) + COOLDOWN_DURATIONS.editorIncrementSeconds;
+			const nextValue = toNumber(currentValue) + COOLDOWN_DURATIONS.editorIncrementSeconds;
 
-			setFrontmatterFieldValue(
-				editor,
-				settings.editDurationPath,
-				nextValue.toString(),
-				{ addToHistory: false },
-			);
+			setFrontmatterFieldValue(editor, settings.editDurationPath, nextValue.toString(), {
+				addToHistory: false,
+			});
 
 			await delay(
 				COOLDOWN_DURATIONS.editorBaseMilliseconds -

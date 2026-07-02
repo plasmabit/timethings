@@ -1,9 +1,5 @@
 import { App, EventRef, MarkdownView } from "obsidian";
-import {
-	DOM_EVENTS,
-	IGNORED_EDITOR_KEYS,
-	VAULT_EVENTS,
-} from "../../constants/plugin.constants";
+import { DOM_EVENTS, IGNORED_EDITOR_KEYS, VAULT_EVENTS } from "../../constants/plugin.constants";
 import { TimeThingsSettings } from "../../settings/settings.types";
 import { MetadataUpdateService } from "./metadata-update.service";
 
@@ -44,11 +40,7 @@ export class ActivityService {
 			}
 
 			const activeView = this.host.app.workspace.getActiveViewOfType(MarkdownView);
-			if (
-				activeView === null ||
-				activeView.file === null ||
-				!activeView.editor.hasFocus()
-			) {
+			if (activeView === null || activeView.file === null || !activeView.editor.hasFocus()) {
 				return;
 			}
 
@@ -66,8 +58,7 @@ export class ActivityService {
 					return;
 				}
 
-				const activeView =
-					this.host.app.workspace.getActiveViewOfType(MarkdownView);
+				const activeView = this.host.app.workspace.getActiveViewOfType(MarkdownView);
 
 				if (activeView?.file === null || activeView?.file === undefined) {
 					return;

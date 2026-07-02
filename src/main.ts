@@ -1,9 +1,5 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
-import {
-	COMMANDS,
-	RIBBON_COMMANDS,
-	VIEW_TYPES,
-} from "./constants/plugin.constants";
+import { COMMANDS, RIBBON_COMMANDS, VIEW_TYPES } from "./constants/plugin.constants";
 import { ActivityService } from "./features/activity/activity.service";
 import { MetadataUpdateService } from "./features/activity/metadata-update.service";
 import { ClockStatusService } from "./features/clock/clock-status.service";
@@ -44,10 +40,7 @@ export default class TimeThings extends Plugin {
 	}
 
 	private initializeServices() {
-		const metadataUpdateService = new MetadataUpdateService(
-			this.app,
-			() => this.settings,
-		);
+		const metadataUpdateService = new MetadataUpdateService(this.app, () => this.settings);
 
 		this.activityService = new ActivityService(this, metadataUpdateService);
 		this.clockStatusService = new ClockStatusService(this);

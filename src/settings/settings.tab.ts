@@ -1,14 +1,9 @@
 import { App, Plugin, PluginSettingTab, SearchComponent, Setting } from "obsidian";
 import { SETTINGS_LINKS } from "../constants/plugin.constants";
-import {
-	normalizeIgnorePath,
-} from "../utils/ignore-rules";
+import { normalizeIgnorePath } from "../utils/ignore-rules";
 import { FileInputSuggest } from "./suggesters/file-input-suggest";
 import { FolderInputSuggest } from "./suggesters/folder-input-suggest";
-import {
-	TimeThingsSettings,
-	TimeThingsSettingsManager,
-} from "./settings.types";
+import { TimeThingsSettings, TimeThingsSettingsManager } from "./settings.types";
 
 type SettingsTabPlugin = Plugin & TimeThingsSettingsManager;
 
@@ -37,11 +32,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			"Smoother experience. Prone to bugs if you use a nested value.",
 			this.plugin.settings.useCustomFrontmatterHandlingSolution,
 			async (value) => {
-				await this.updateSetting(
-					"useCustomFrontmatterHandlingSolution",
-					value,
-					true,
-				);
+				await this.updateSetting("useCustomFrontmatterHandlingSolution", value, true);
 			},
 		);
 	}
@@ -106,11 +97,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 	}
 
 	private renderFrontmatterSection(containerEl: HTMLElement) {
-		this.createSection(
-			containerEl,
-			"Frontmatter",
-			"Handles timestamp keys in frontmatter.",
-		);
+		this.createSection(containerEl, "Frontmatter", "Handles timestamp keys in frontmatter.");
 		this.renderModifiedKeySection(containerEl);
 		this.renderEditDurationSection(containerEl);
 		this.renderIgnoreSection(containerEl);
@@ -165,10 +152,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				1,
 				this.plugin.settings.updateIntervalFrontmatterMinutes,
 				async (value) => {
-					await this.updateSetting(
-						"updateIntervalFrontmatterMinutes",
-						value,
-					);
+					await this.updateSetting("updateIntervalFrontmatterMinutes", value);
 				},
 			);
 		}
@@ -268,11 +252,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		);
 	}
 
-	private createSection(
-		containerEl: HTMLElement,
-		title: string,
-		description: string,
-	) {
+	private createSection(containerEl: HTMLElement, title: string, description: string) {
 		const titleElement = containerEl.createEl("p");
 
 		titleElement.createEl("strong", { text: title });
@@ -368,35 +348,32 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				attachSuggest(search.inputEl);
 			})
 			.addButton((button) =>
-				button.setIcon("plus").setTooltip("Add").onClick(async () => {
-					const rawValue = searchComponent?.getValue().trim();
+				button
+					.setIcon("plus")
+					.setTooltip("Add")
+					.onClick(async () => {
+						const rawValue = searchComponent?.getValue().trim();
 
-					if (!rawValue) {
-						return;
-					}
+						if (!rawValue) {
+							return;
+						}
 
-					const normalizedValue = normalizeIgnorePath(rawValue);
-					const nextValues = Array.from(
-						new Set([...currentValues, normalizedValue]),
-					);
+						const normalizedValue = normalizeIgnorePath(rawValue);
+						const nextValues = Array.from(new Set([...currentValues, normalizedValue]));
 
-					await onChange(nextValues);
-					searchComponent?.setValue("");
-					this.display();
-				}),
+						await onChange(nextValues);
+						searchComponent?.setValue("");
+						this.display();
+					}),
 			);
 
 		for (const currentValue of currentValues) {
-			new Setting(containerEl)
-				.setName(currentValue)
-				.addButton((button) =>
-					button.setButtonText("Remove").onClick(async () => {
-						await onChange(
-							currentValues.filter((value) => value !== currentValue),
-						);
-						this.display();
-					}),
-				);
+			new Setting(containerEl).setName(currentValue).addButton((button) =>
+				button.setButtonText("Remove").onClick(async () => {
+					await onChange(currentValues.filter((value) => value !== currentValue));
+					this.display();
+				}),
+			);
 		}
 	}
 

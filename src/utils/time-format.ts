@@ -36,8 +36,5 @@ export function formatSeconds(seconds: number, format: string): string {
 }
 
 function normalizeClockFormat(format: string): string {
-	return format.replace(
-		/(^|[^A-Za-z])((?:H{1,2}|h{1,2}):)MM(?=$|[^A-Za-z])/g,
-		"$1$2mm",
-	);
+	return format.replace(/(^|[^A-Za-z])((?:H{1,2}|h{1,2}):)MM(?=$|[^A-Za-z])/g, "$1$2mm");
 }

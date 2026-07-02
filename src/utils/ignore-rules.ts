@@ -30,10 +30,7 @@ export function isFileIgnored(
 	}
 
 	return normalizedIgnoredFolders.some((folderPath) => {
-		return (
-			normalizedFilePath === folderPath ||
-			normalizedFilePath.startsWith(`${folderPath}/`)
-		);
+		return normalizedFilePath === folderPath || normalizedFilePath.startsWith(`${folderPath}/`);
 	});
 }
 
