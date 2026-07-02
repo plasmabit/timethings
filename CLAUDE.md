@@ -6,10 +6,10 @@ TimeThings is an Obsidian plugin that provides a status-bar clock, updates modif
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Build continuously for development |
-| `npm run build` | Create the production bundle |
-| `npm test` | Run the Vitest suite |
-| `npm run check` | Run typechecking, linting, and formatting checks |
+| `pnpm dev` | Build continuously for development |
+| `pnpm build` | Create the production bundle |
+| `pnpm test` | Run the Vitest suite |
+| `pnpm check` | Run typechecking, linting, and formatting checks |
 
 ## Architecture
 
