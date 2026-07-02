@@ -1,10 +1,7 @@
 import { App, TFile } from "obsidian";
-import {
-	FRONTMATTER_FIELDS,
-	MOST_EDITED_VIEW,
-} from "../../constants/plugin.constants";
-import { getNestedFrontmatterValue } from "../../utils/frontmatter-path";
-import { isFileIgnored } from "../../utils/ignore-rules";
+import { getNestedFrontmatterValue } from "../../shared/lib/frontmatter";
+import { isFileIgnored } from "../../shared/lib/ignore";
+import { FRONTMATTER_FIELDS, MOST_EDITED_VIEW } from "./most-edited.constants";
 
 export interface MostEditedEntry {
 	file: TFile;
@@ -38,9 +35,7 @@ export class MostEditedService {
 			entries.push({ file, editedSeconds });
 		}
 
-		return entries.sort(
-			(left, right) => right.editedSeconds - left.editedSeconds,
-		);
+		return entries.sort((left, right) => right.editedSeconds - left.editedSeconds);
 	}
 
 	getTotalEditedSeconds(entries: readonly MostEditedEntry[]): number {

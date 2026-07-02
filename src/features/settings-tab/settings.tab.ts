@@ -1,14 +1,12 @@
 import { App, Plugin, PluginSettingTab, SearchComponent, Setting } from "obsidian";
-import { SETTINGS_LINKS } from "../constants/plugin.constants";
 import {
-	normalizeIgnorePath,
-} from "../utils/ignore-rules";
-import { FileInputSuggest } from "./suggesters/file-input-suggest";
-import { FolderInputSuggest } from "./suggesters/folder-input-suggest";
-import {
-	TimeThingsSettings,
-	TimeThingsSettingsManager,
-} from "./settings.types";
+	normalizeUpdateInterval,
+	type TimeThingsSettings,
+	type TimeThingsSettingsManager,
+} from "../../shared/config";
+import { normalizeIgnorePath } from "../../shared/lib/ignore";
+import { FileInputSuggest, FolderInputSuggest } from "../../shared/ui/suggesters";
+import { SETTINGS_LINKS } from "./settings-tab.constants";
 
 type SettingsTabPlugin = Plugin & TimeThingsSettingsManager;
 
@@ -37,11 +35,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			"Smoother experience. Prone to bugs if you use a nested value.",
 			this.plugin.settings.useCustomFrontmatterHandlingSolution,
 			async (value) => {
-				await this.updateSetting(
-					"useCustomFrontmatterHandlingSolution",
-					value,
-					true,
-				);
+				await this.updateSetting("useCustomFrontmatterHandlingSolution", value, true);
 			},
 		);
 	}
@@ -74,7 +68,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			this.addTextSetting(
 				containerEl,
 				"Date format",
-				this.createMomentFormatLink(),
+				this.createFormatTokenLink(),
 				"hh:mm A",
 				this.plugin.settings.clockFormat,
 				async (value) => {
@@ -87,9 +81,12 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				"Update interval",
 				"In milliseconds. Restart plugin for this setting to take effect.",
 				"1000",
-				this.plugin.settings.updateIntervalMilliseconds,
+				String(this.plugin.settings.updateIntervalMilliseconds),
 				async (value) => {
-					await this.updateSetting("updateIntervalMilliseconds", value);
+					await this.updateSetting(
+						"updateIntervalMilliseconds",
+						normalizeUpdateInterval(value),
+					);
 				},
 			);
 
@@ -106,11 +103,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 	}
 
 	private renderFrontmatterSection(containerEl: HTMLElement) {
-		this.createSection(
-			containerEl,
-			"Frontmatter",
-			"Handles timestamp keys in frontmatter.",
-		);
+		this.createSection(containerEl, "Frontmatter", "Handles timestamp keys in frontmatter.");
 		this.renderModifiedKeySection(containerEl);
 		this.renderEditDurationSection(containerEl);
 		this.renderIgnoreSection(containerEl);
@@ -147,7 +140,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		this.addTextSetting(
 			containerEl,
 			"Modified key format",
-			this.createMomentFormatLink(),
+			this.createFormatTokenLink(),
 			"YYYY-MM-DD[T]HH:mm:ss.SSSZ",
 			this.plugin.settings.modifiedKeyFormat,
 			async (value) => {
@@ -165,10 +158,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				1,
 				this.plugin.settings.updateIntervalFrontmatterMinutes,
 				async (value) => {
-					await this.updateSetting(
-						"updateIntervalFrontmatterMinutes",
-						value,
-					);
+					await this.updateSetting("updateIntervalFrontmatterMinutes", value);
 				},
 			);
 		}
@@ -268,11 +258,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		);
 	}
 
-	private createSection(
-		containerEl: HTMLElement,
-		title: string,
-		description: string,
-	) {
+	private createSection(containerEl: HTMLElement, title: string, description: string) {
 		const titleElement = containerEl.createEl("p");
 
 		titleElement.createEl("strong", { text: title });
@@ -285,12 +271,12 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		titleElement.createEl("strong", { text: title });
 	}
 
-	private createMomentFormatLink() {
+	private createFormatTokenLink() {
 		const fragment = document.createDocumentFragment();
 		const link = document.createElement("a");
 
-		link.href = SETTINGS_LINKS.momentFormatDocs;
-		link.textContent = "Moment.js date format documentation";
+		link.href = SETTINGS_LINKS.formatTokenDocs;
+		link.textContent = "Supported date format tokens";
 		fragment.append(link);
 
 		return fragment;
@@ -368,35 +354,32 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				attachSuggest(search.inputEl);
 			})
 			.addButton((button) =>
-				button.setIcon("plus").setTooltip("Add").onClick(async () => {
-					const rawValue = searchComponent?.getValue().trim();
+				button
+					.setIcon("plus")
+					.setTooltip("Add")
+					.onClick(async () => {
+						const rawValue = searchComponent?.getValue().trim();
 
-					if (!rawValue) {
-						return;
-					}
+						if (!rawValue) {
+							return;
+						}
 
-					const normalizedValue = normalizeIgnorePath(rawValue);
-					const nextValues = Array.from(
-						new Set([...currentValues, normalizedValue]),
-					);
+						const normalizedValue = normalizeIgnorePath(rawValue);
+						const nextValues = Array.from(new Set([...currentValues, normalizedValue]));
 
-					await onChange(nextValues);
-					searchComponent?.setValue("");
-					this.display();
-				}),
+						await onChange(nextValues);
+						searchComponent?.setValue("");
+						this.display();
+					}),
 			);
 
 		for (const currentValue of currentValues) {
-			new Setting(containerEl)
-				.setName(currentValue)
-				.addButton((button) =>
-					button.setButtonText("Remove").onClick(async () => {
-						await onChange(
-							currentValues.filter((value) => value !== currentValue),
-						);
-						this.display();
-					}),
-				);
+			new Setting(containerEl).setName(currentValue).addButton((button) =>
+				button.setButtonText("Remove").onClick(async () => {
+					await onChange(currentValues.filter((value) => value !== currentValue));
+					this.display();
+				}),
+			);
 		}
 	}
 
