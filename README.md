@@ -2,7 +2,21 @@
 
 Show clock in status bar. Sync modified file property with frontmatter.
 
-This plugin uses moment.js. It's a time manipulation library that is already included in Obsidian.
+## v2.0.0 breaking changes
+
+- The "Most edited notes" view is registered under a new internal ID; if a
+  saved workspace layout shows an empty pane where the view was, close it and
+  reopen the view from the ribbon or command palette (one-time).
+- The command ID changed; re-assign your hotkey for "Most edited notes" if
+  you had one.
+- Date/time formats are now interpreted by a built-in formatter instead of
+  moment.js. All tokens documented in the Format tokens section below —
+  including the defaults and previously recommended formats — behave
+  identically. Exotic moment tokens outside that table (for example, `Do` and
+  `ddd`) are now rendered literally.
+- The clock update interval setting is stored as a number; existing values
+  migrate automatically (a minimum of 100 ms is now enforced).
+- Requires Obsidian 1.5.7 or newer.
 
 ![Obsidian_vH8xXX5e7Z](https://github.com/DynamicPlayerSector/timethings/assets/65742767/67edb231-1149-4896-a0f1-6cfa2aec3d93)
 
@@ -10,7 +24,7 @@ This plugin uses moment.js. It's a time manipulation library that is already inc
 
 ![image](https://github.com/DynamicPlayerSector/timethings/assets/65742767/c2b4c4e0-002b-43ea-8b94-6860d6f7c703)
 
-- Option to change the date format. Recommended: `HH:MM:ss` and `hh:mm A`.
+- Option to change the date format. Recommended: `HH:mm:ss` and `hh:mm A`.
 - Option to change update interval.
 - Option to use UTC timezone.
 
@@ -24,6 +38,28 @@ This plugin uses moment.js. It's a time manipulation library that is already inc
 
 - Track time spent editing a note
 - Display editing duration of current note in the status bar
+
+## Format tokens
+
+Clock and modified-timestamp formats support the following tokens. Text inside square
+brackets is emitted literally.
+
+| Token | Meaning |
+| --- | --- |
+| `YYYY` | Four-digit year |
+| `MM` | Two-digit month |
+| `DD` | Two-digit day |
+| `HH` | Two-digit 24-hour hour |
+| `H` | One- or two-digit 24-hour hour |
+| `hh` | Two-digit 12-hour hour |
+| `h` | One- or two-digit 12-hour hour |
+| `mm` | Two-digit minute |
+| `ss` | Two-digit second |
+| `SSS` | Three-digit millisecond |
+| `A` | Uppercase AM/PM |
+| `a` | Lowercase am/pm |
+| `Z` | UTC offset, such as `+05:30` |
+| `[literal]` | Literal text |
 
 ## About custom frontmatter handling solution
 

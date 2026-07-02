@@ -1,10 +1,6 @@
-import { App, EventRef, MarkdownView } from "obsidian";
-import {
-	DOM_EVENTS,
-	IGNORED_EDITOR_KEYS,
-	VAULT_EVENTS,
-} from "../../constants/plugin.constants";
-import { TimeThingsSettings } from "../../settings/settings.types";
+import { App, EventRef, MarkdownView, TFile } from "obsidian";
+import type { TimeThingsSettings } from "../../shared/config";
+import { IGNORED_EDITOR_KEYS } from "./activity.constants";
 import { MetadataUpdateService } from "./metadata-update.service";
 
 interface ActivityServiceHost {
@@ -31,7 +27,7 @@ export class ActivityService {
 	}
 
 	private registerEditorActivityHandler() {
-		this.host.registerDomEvent(document, DOM_EVENTS.keyUp, (event) => {
+		this.host.registerDomEvent(document, "keyup", (event) => {
 			if (!(event instanceof KeyboardEvent)) {
 				return;
 			}
@@ -44,11 +40,7 @@ export class ActivityService {
 			}
 
 			const activeView = this.host.app.workspace.getActiveViewOfType(MarkdownView);
-			if (
-				activeView === null ||
-				activeView.file === null ||
-				!activeView.editor.hasFocus()
-			) {
+			if (activeView === null || activeView.file === null || !activeView.editor.hasFocus()) {
 				return;
 			}
 
@@ -61,19 +53,22 @@ export class ActivityService {
 
 	private registerFrontmatterActivityHandler() {
 		this.host.registerEvent(
-			this.host.app.vault.on(VAULT_EVENTS.modify, () => {
+			this.host.app.vault.on("modify", (file) => {
 				if (this.host.settings.useCustomFrontmatterHandlingSolution) {
 					return;
 				}
 
-				const activeView =
-					this.host.app.workspace.getActiveViewOfType(MarkdownView);
-
-				if (activeView?.file === null || activeView?.file === undefined) {
+				if (!(file instanceof TFile)) {
 					return;
 				}
 
-				void this.metadataUpdateService.updateFileMetadata(activeView.file);
+				const activeView = this.host.app.workspace.getActiveViewOfType(MarkdownView);
+
+				if (activeView?.file !== file) {
+					return;
+				}
+
+				void this.metadataUpdateService.updateFileMetadata(file);
 			}),
 		);
 	}

@@ -2,7 +2,7 @@ export interface TimeThingsSettings {
 	useCustomFrontmatterHandlingSolution: boolean;
 	showEmojiStatusBar: boolean;
 	clockFormat: string;
-	updateIntervalMilliseconds: string;
+	updateIntervalMilliseconds: number;
 	enableClock: boolean;
 	isUTC: boolean;
 	modifiedKeyName: string;
@@ -14,9 +14,6 @@ export interface TimeThingsSettings {
 	nonTypingEditingTimePercentage: number;
 	ignoredFolders: string[];
 	ignoredFiles: string[];
-	enableSwitch: boolean;
-	switchKey: string;
-	switchKeyValue: string;
 }
 
 export interface TimeThingsSettingsManager {

@@ -1,7 +1,6 @@
-import { moment } from "obsidian";
-import { STATUS_BAR } from "../../constants/plugin.constants";
-import { TimeThingsSettings } from "../../settings/settings.types";
-import { formatMomentAsClockEmoji } from "../../utils/time-format";
+import type { TimeThingsSettings } from "../../shared/config";
+import { clockEmoji, formatClock, now } from "../../shared/lib/datetime";
+import { STATUS_BAR } from "./clock.constants";
 
 interface ClockStatusHost {
 	settings: TimeThingsSettings;
@@ -25,7 +24,7 @@ export class ClockStatusService {
 		this.host.registerInterval(
 			window.setInterval(() => {
 				this.renderClock();
-			}, Number(this.host.settings.updateIntervalMilliseconds)),
+			}, this.host.settings.updateIntervalMilliseconds),
 		);
 	}
 
@@ -34,11 +33,11 @@ export class ClockStatusService {
 			return;
 		}
 
-		const currentTime = this.host.settings.isUTC ? moment.utc() : moment();
-		const formattedTime = currentTime.format(this.host.settings.clockFormat);
-		const clockEmoji = formatMomentAsClockEmoji(currentTime);
+		const currentTime = now(this.host.settings.isUTC);
+		const formattedTime = formatClock(currentTime, this.host.settings.clockFormat);
+		const emoji = clockEmoji(currentTime);
 		const statusText = this.host.settings.showEmojiStatusBar
-			? `${clockEmoji} ${formattedTime}`
+			? `${emoji} ${formattedTime}`
 			: formattedTime;
 
 		this.clockBar.setText(statusText);

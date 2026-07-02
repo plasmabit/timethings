@@ -1,16 +1,20 @@
-import { App, Editor, TFile, moment } from "obsidian";
-import { COOLDOWN_DURATIONS } from "../../constants/plugin.constants";
-import { TimeThingsSettings } from "../../settings/settings.types";
+import { App, Editor, TFile } from "obsidian";
+import type { TimeThingsSettings } from "../../shared/config";
 import {
 	findFrontmatterFieldLine,
 	readFrontmatterFieldValueAtLine,
 	setFrontmatterFieldValue,
-} from "../../utils/editor-frontmatter";
-import {
 	getNestedFrontmatterValue,
 	setNestedFrontmatterValue,
-} from "../../utils/frontmatter-path";
-import { isFileIgnored } from "../../utils/ignore-rules";
+} from "../../shared/lib/frontmatter";
+import { isFileIgnored } from "../../shared/lib/ignore";
+import {
+	formatTimestamp,
+	isWithinMinutes,
+	now,
+	parseTimestampStrict,
+} from "../../shared/lib/datetime";
+import { COOLDOWN_DURATIONS } from "./activity.constants";
 
 type SettingsAccessor = () => TimeThingsSettings;
 
@@ -27,7 +31,9 @@ export class MetadataUpdateService {
 			return;
 		}
 
-		this.updateModifiedTimestampInEditor(editor);
+		if (this.getSettings().enableModifiedKeyUpdate) {
+			this.updateModifiedTimestampInEditor(editor);
+		}
 
 		if (this.getSettings().enableEditDurationKey) {
 			await this.updateEditDurationInEditor(editor);
@@ -39,7 +45,9 @@ export class MetadataUpdateService {
 			return;
 		}
 
-		await this.updateModifiedTimestampInFrontmatter(file);
+		if (this.getSettings().enableModifiedKeyUpdate) {
+			await this.updateModifiedTimestampInFrontmatter(file);
+		}
 
 		if (this.getSettings().enableEditDurationKey) {
 			await this.updateEditDurationInFrontmatter(file);
@@ -48,10 +56,7 @@ export class MetadataUpdateService {
 
 	private updateModifiedTimestampInEditor(editor: Editor) {
 		const settings = this.getSettings();
-		const lineNumber = findFrontmatterFieldLine(
-			editor,
-			settings.modifiedKeyName,
-		);
+		const lineNumber = findFrontmatterFieldLine(editor, settings.modifiedKeyName);
 
 		if (lineNumber === undefined) {
 			return;
@@ -60,7 +65,7 @@ export class MetadataUpdateService {
 		const currentValue = readFrontmatterFieldValueAtLine(editor, lineNumber);
 		if (
 			typeof currentValue !== "string" ||
-			!moment(currentValue, settings.modifiedKeyFormat, true).isValid()
+			parseTimestampStrict(currentValue, settings.modifiedKeyFormat) === undefined
 		) {
 			return;
 		}
@@ -68,7 +73,7 @@ export class MetadataUpdateService {
 		setFrontmatterFieldValue(
 			editor,
 			settings.modifiedKeyName,
-			moment().format(settings.modifiedKeyFormat),
+			formatTimestamp(now(false), settings.modifiedKeyFormat),
 			{ addToHistory: false },
 		);
 	}
@@ -77,22 +82,16 @@ export class MetadataUpdateService {
 		const settings = this.getSettings();
 
 		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-			const currentValue = getNestedFrontmatterValue(
-				frontmatter,
-				settings.modifiedKeyName,
-			);
-			const now = moment();
-			const nextAllowedUpdate = moment(
-				typeof currentValue === "string" ? currentValue : undefined,
-				settings.modifiedKeyFormat,
-			);
+			const currentValue = getNestedFrontmatterValue(frontmatter, settings.modifiedKeyName);
+			const currentTime = now(false);
+			const previous =
+				typeof currentValue === "string"
+					? parseTimestampStrict(currentValue, settings.modifiedKeyFormat)
+					: undefined;
 
 			if (
-				nextAllowedUpdate.isValid() &&
-				nextAllowedUpdate
-					.clone()
-					.add(settings.updateIntervalFrontmatterMinutes, "minutes")
-					.isAfter(now)
+				previous &&
+				isWithinMinutes(previous, currentTime, settings.updateIntervalFrontmatterMinutes)
 			) {
 				return;
 			}
@@ -100,7 +99,7 @@ export class MetadataUpdateService {
 			setNestedFrontmatterValue(
 				frontmatter,
 				settings.modifiedKeyName,
-				now.format(settings.modifiedKeyFormat),
+				formatTimestamp(currentTime, settings.modifiedKeyFormat),
 			);
 		});
 	}
@@ -119,8 +118,7 @@ export class MetadataUpdateService {
 					this.getSettings().editDurationPath,
 				);
 				const nextValue =
-					toNumber(currentValue) +
-					COOLDOWN_DURATIONS.frontmatterIncrementSeconds;
+					toNumber(currentValue) + COOLDOWN_DURATIONS.frontmatterIncrementSeconds;
 
 				setNestedFrontmatterValue(
 					frontmatter,
@@ -147,25 +145,18 @@ export class MetadataUpdateService {
 
 		try {
 			const settings = this.getSettings();
-			const lineNumber = findFrontmatterFieldLine(
-				editor,
-				settings.editDurationPath,
-			);
+			const lineNumber = findFrontmatterFieldLine(editor, settings.editDurationPath);
 
 			if (lineNumber === undefined) {
 				return;
 			}
 
 			const currentValue = readFrontmatterFieldValueAtLine(editor, lineNumber);
-			const nextValue =
-				toNumber(currentValue) + COOLDOWN_DURATIONS.editorIncrementSeconds;
+			const nextValue = toNumber(currentValue) + COOLDOWN_DURATIONS.editorIncrementSeconds;
 
-			setFrontmatterFieldValue(
-				editor,
-				settings.editDurationPath,
-				nextValue.toString(),
-				{ addToHistory: false },
-			);
+			setFrontmatterFieldValue(editor, settings.editDurationPath, nextValue.toString(), {
+				addToHistory: false,
+			});
 
 			await delay(
 				COOLDOWN_DURATIONS.editorBaseMilliseconds -

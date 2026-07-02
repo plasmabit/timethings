@@ -9,14 +9,9 @@ export class FolderInputSuggest extends PathInputSuggest<TFolder> {
 	protected getSuggestions(query: string): TFolder[] {
 		const normalizedQuery = query.toLowerCase();
 
-		return this.app.vault
-			.getAllLoadedFiles()
-			.filter((file): file is TFolder => {
-				return (
-					file instanceof TFolder &&
-					file.path.toLowerCase().includes(normalizedQuery)
-				);
-			});
+		return this.app.vault.getAllLoadedFiles().filter((file): file is TFolder => {
+			return file instanceof TFolder && file.path.toLowerCase().includes(normalizedQuery);
+		});
 	}
 
 	protected getItemText(value: TAbstractFile): string {
