@@ -1,6 +1,5 @@
-import { moment } from "obsidian";
 import type { TimeThingsSettings } from "../../shared/config";
-import { formatMomentAsClock, formatMomentAsClockEmoji } from "../../shared/lib/datetime";
+import { clockEmoji, formatClock, now } from "../../shared/lib/datetime";
 import { STATUS_BAR } from "./clock.constants";
 
 interface ClockStatusHost {
@@ -34,11 +33,11 @@ export class ClockStatusService {
 			return;
 		}
 
-		const currentTime = this.host.settings.isUTC ? moment.utc() : moment();
-		const formattedTime = formatMomentAsClock(currentTime, this.host.settings.clockFormat);
-		const clockEmoji = formatMomentAsClockEmoji(currentTime);
+		const currentTime = now(this.host.settings.isUTC);
+		const formattedTime = formatClock(currentTime, this.host.settings.clockFormat);
+		const emoji = clockEmoji(currentTime);
 		const statusText = this.host.settings.showEmojiStatusBar
-			? `${clockEmoji} ${formattedTime}`
+			? `${emoji} ${formattedTime}`
 			: formattedTime;
 
 		this.clockBar.setText(statusText);

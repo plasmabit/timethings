@@ -1,4 +1,4 @@
-import { App, Editor, TFile, moment } from "obsidian";
+import { App, Editor, TFile } from "obsidian";
 import type { TimeThingsSettings } from "../../shared/config";
 import {
 	findFrontmatterFieldLine,
@@ -8,6 +8,12 @@ import {
 	setNestedFrontmatterValue,
 } from "../../shared/lib/frontmatter";
 import { isFileIgnored } from "../../shared/lib/ignore";
+import {
+	formatTimestamp,
+	isWithinMinutes,
+	now,
+	parseTimestampStrict,
+} from "../../shared/lib/datetime";
 import { COOLDOWN_DURATIONS } from "./activity.constants";
 
 type SettingsAccessor = () => TimeThingsSettings;
@@ -59,7 +65,7 @@ export class MetadataUpdateService {
 		const currentValue = readFrontmatterFieldValueAtLine(editor, lineNumber);
 		if (
 			typeof currentValue !== "string" ||
-			!moment(currentValue, settings.modifiedKeyFormat, true).isValid()
+			parseTimestampStrict(currentValue, settings.modifiedKeyFormat) === undefined
 		) {
 			return;
 		}
@@ -67,7 +73,7 @@ export class MetadataUpdateService {
 		setFrontmatterFieldValue(
 			editor,
 			settings.modifiedKeyName,
-			moment().format(settings.modifiedKeyFormat),
+			formatTimestamp(now(false), settings.modifiedKeyFormat),
 			{ addToHistory: false },
 		);
 	}
@@ -77,18 +83,15 @@ export class MetadataUpdateService {
 
 		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
 			const currentValue = getNestedFrontmatterValue(frontmatter, settings.modifiedKeyName);
-			const now = moment();
-			const nextAllowedUpdate = moment(
-				typeof currentValue === "string" ? currentValue : undefined,
-				settings.modifiedKeyFormat,
-			);
+			const currentTime = now(false);
+			const previous =
+				typeof currentValue === "string"
+					? parseTimestampStrict(currentValue, settings.modifiedKeyFormat)
+					: undefined;
 
 			if (
-				nextAllowedUpdate.isValid() &&
-				nextAllowedUpdate
-					.clone()
-					.add(settings.updateIntervalFrontmatterMinutes, "minutes")
-					.isAfter(now)
+				previous &&
+				isWithinMinutes(previous, currentTime, settings.updateIntervalFrontmatterMinutes)
 			) {
 				return;
 			}
@@ -96,7 +99,7 @@ export class MetadataUpdateService {
 			setNestedFrontmatterValue(
 				frontmatter,
 				settings.modifiedKeyName,
-				now.format(settings.modifiedKeyFormat),
+				formatTimestamp(currentTime, settings.modifiedKeyFormat),
 			);
 		});
 	}

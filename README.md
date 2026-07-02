@@ -2,8 +2,6 @@
 
 Show clock in status bar. Sync modified file property with frontmatter.
 
-This plugin uses moment.js. It's a time manipulation library that is already included in Obsidian.
-
 ![Obsidian_vH8xXX5e7Z](https://github.com/DynamicPlayerSector/timethings/assets/65742767/67edb231-1149-4896-a0f1-6cfa2aec3d93)
 
 ## Clock
@@ -24,6 +22,28 @@ This plugin uses moment.js. It's a time manipulation library that is already inc
 
 - Track time spent editing a note
 - Display editing duration of current note in the status bar
+
+## Format tokens
+
+Clock and modified-timestamp formats support the following tokens. Text inside square
+brackets is emitted literally.
+
+| Token | Meaning |
+| --- | --- |
+| `YYYY` | Four-digit year |
+| `MM` | Two-digit month |
+| `DD` | Two-digit day |
+| `HH` | Two-digit 24-hour hour |
+| `H` | One- or two-digit 24-hour hour |
+| `hh` | Two-digit 12-hour hour |
+| `h` | One- or two-digit 12-hour hour |
+| `mm` | Two-digit minute |
+| `ss` | Two-digit second |
+| `SSS` | Three-digit millisecond |
+| `A` | Uppercase AM/PM |
+| `a` | Lowercase am/pm |
+| `Z` | UTC offset, such as `+05:30` |
+| `[literal]` | Literal text |
 
 ## About custom frontmatter handling solution
 

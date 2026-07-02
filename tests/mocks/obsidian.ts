@@ -1,5 +1,3 @@
-export { default as moment } from "moment";
-
 export function normalizePath(path: string): string {
 	let result = path.trim().replace(/\\/g, "/").replace(/\/+/g, "/");
 	result = result.replace(/^\/+/, "").replace(/\/+$/, "");

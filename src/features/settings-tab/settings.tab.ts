@@ -68,7 +68,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			this.addTextSetting(
 				containerEl,
 				"Date format",
-				this.createMomentFormatLink(),
+				this.createFormatTokenLink(),
 				"hh:mm A",
 				this.plugin.settings.clockFormat,
 				async (value) => {
@@ -140,7 +140,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		this.addTextSetting(
 			containerEl,
 			"Modified key format",
-			this.createMomentFormatLink(),
+			this.createFormatTokenLink(),
 			"YYYY-MM-DD[T]HH:mm:ss.SSSZ",
 			this.plugin.settings.modifiedKeyFormat,
 			async (value) => {
@@ -271,12 +271,12 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		titleElement.createEl("strong", { text: title });
 	}
 
-	private createMomentFormatLink() {
+	private createFormatTokenLink() {
 		const fragment = document.createDocumentFragment();
 		const link = document.createElement("a");
 
-		link.href = SETTINGS_LINKS.momentFormatDocs;
-		link.textContent = "Moment.js date format documentation";
+		link.href = SETTINGS_LINKS.formatTokenDocs;
+		link.textContent = "Supported date format tokens";
 		fragment.append(link);
 
 		return fragment;

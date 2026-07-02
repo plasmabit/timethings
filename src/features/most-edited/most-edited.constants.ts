@@ -9,7 +9,6 @@ export const FRONTMATTER_FIELDS = {
 export const MOST_EDITED_VIEW = {
 	title: "Most edited notes",
 	displayText: "Most edited files",
-	durationFormat: "h[h] m[m]",
 	totalTimePrefix: "Total time spent editing: ",
 	minimumVisibleSeconds: 60,
 } as const;

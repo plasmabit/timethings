@@ -1,8 +1,9 @@
 import type { App, Editor } from "obsidian";
-import { TFile, moment } from "obsidian";
+import { TFile } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MetadataUpdateService } from "../src/features/activity/metadata-update.service";
 import { DEFAULT_SETTINGS, type TimeThingsSettings } from "../src/shared/config";
+import { formatTimestamp, now, parseTimestampStrict } from "../src/shared/lib/datetime";
 import { FakeEditor } from "./helpers/fake-editor";
 
 function file(path = "Notes/test.md"): TFile {
@@ -56,24 +57,18 @@ describe("updateFileMetadata", () => {
 	});
 
 	it("updates an old modified timestamp", async () => {
-		const old = moment().subtract(2, "minutes").format(DEFAULT_SETTINGS.modifiedKeyFormat);
+		const old = formatTimestamp(now(false).subtract({ minutes: 2 }), DEFAULT_SETTINGS.modifiedKeyFormat);
 		const { frontmatter, service } = setup(
 			{ updated_at: old },
 			{ enableEditDurationKey: false },
 		);
 		await service.updateFileMetadata(file());
 		expect(frontmatter.updated_at).not.toBe(old);
-		expect(
-			moment(
-				frontmatter.updated_at as string,
-				DEFAULT_SETTINGS.modifiedKeyFormat,
-				true,
-			).isValid(),
-		).toBe(true);
+		expect(parseTimestampStrict(frontmatter.updated_at as string, DEFAULT_SETTINGS.modifiedKeyFormat)).toBeDefined();
 	});
 
 	it("keeps a fresh modified timestamp", async () => {
-		const fresh = moment().format(DEFAULT_SETTINGS.modifiedKeyFormat);
+		const fresh = formatTimestamp(now(false), DEFAULT_SETTINGS.modifiedKeyFormat);
 		const { frontmatter, service } = setup(
 			{ updated_at: fresh },
 			{ enableEditDurationKey: false },
@@ -88,13 +83,7 @@ describe("updateFileMetadata", () => {
 			const initial = value === undefined ? {} : { updated_at: value };
 			const { frontmatter, service } = setup(initial, { enableEditDurationKey: false });
 			await service.updateFileMetadata(file());
-			expect(
-				moment(
-					frontmatter.updated_at as string,
-					DEFAULT_SETTINGS.modifiedKeyFormat,
-					true,
-				).isValid(),
-			).toBe(true);
+			expect(parseTimestampStrict(frontmatter.updated_at as string, DEFAULT_SETTINGS.modifiedKeyFormat)).toBeDefined();
 		},
 	);
 
@@ -138,13 +127,13 @@ describe("updateEditorMetadata", () => {
 	});
 
 	it("updates a strictly valid modified timestamp", async () => {
-		const old = moment().subtract(1, "minute").format(DEFAULT_SETTINGS.modifiedKeyFormat);
+		const old = formatTimestamp(now(false).subtract({ minutes: 1 }), DEFAULT_SETTINGS.modifiedKeyFormat);
 		const { service } = setup({}, { enableEditDurationKey: false });
 		const fake = new FakeEditor(["---", `updated_at: ${old}`, "---"]);
 		await service.updateEditorMetadata(file(), fake as unknown as Editor);
 		const updated = fake.getLine(1).slice("updated_at: ".length);
 		expect(updated).not.toBe(old);
-		expect(moment(updated, DEFAULT_SETTINGS.modifiedKeyFormat, true).isValid()).toBe(true);
+		expect(parseTimestampStrict(updated, DEFAULT_SETTINGS.modifiedKeyFormat)).toBeDefined();
 	});
 
 	it("leaves an invalid editor timestamp unchanged", async () => {

@@ -1,7 +1,7 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import { MOST_EDITED_VIEW, MOST_EDITED_VIEW_CLASSES, VIEW_TYPES } from "./most-edited.constants";
 import type { TimeThingsSettings } from "../../shared/config";
-import { formatSeconds } from "../../shared/lib/datetime";
+import { formatDurationHoursMinutes } from "../../shared/lib/datetime";
 import { MostEditedEntry, MostEditedService } from "./most-edited.service";
 
 export class MostEditedView extends ItemView {
@@ -49,7 +49,7 @@ export class MostEditedView extends ItemView {
 			this.contentEl.createEl("p", {
 				text:
 					MOST_EDITED_VIEW.totalTimePrefix +
-					formatSeconds(totalEditedSeconds, MOST_EDITED_VIEW.durationFormat),
+					formatDurationHoursMinutes(totalEditedSeconds),
 			}),
 		);
 	}
@@ -77,7 +77,7 @@ export class MostEditedView extends ItemView {
 		);
 		row.appendChild(
 			createEl("div", {
-				text: formatSeconds(entry.editedSeconds, MOST_EDITED_VIEW.durationFormat),
+				text: formatDurationHoursMinutes(entry.editedSeconds),
 				cls: MOST_EDITED_VIEW_CLASSES.value,
 			}),
 		);
