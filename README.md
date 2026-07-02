@@ -2,6 +2,22 @@
 
 Show clock in status bar. Sync modified file property with frontmatter.
 
+## v2.0.0 breaking changes
+
+- The "Most edited notes" view is registered under a new internal ID; if a
+  saved workspace layout shows an empty pane where the view was, close it and
+  reopen the view from the ribbon or command palette (one-time).
+- The command ID changed; re-assign your hotkey for "Most edited notes" if
+  you had one.
+- Date/time formats are now interpreted by a built-in formatter instead of
+  moment.js. All tokens documented in the Format tokens section below —
+  including the defaults and previously recommended formats — behave
+  identically. Exotic moment tokens outside that table (for example, `Do` and
+  `ddd`) are now rendered literally.
+- The clock update interval setting is stored as a number; existing values
+  migrate automatically (a minimum of 100 ms is now enforced).
+- Requires Obsidian 1.5.7 or newer.
+
 ![Obsidian_vH8xXX5e7Z](https://github.com/DynamicPlayerSector/timethings/assets/65742767/67edb231-1149-4896-a0f1-6cfa2aec3d93)
 
 ## Clock
