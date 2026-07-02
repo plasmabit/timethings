@@ -25,7 +25,7 @@ export class ClockStatusService {
 		this.host.registerInterval(
 			window.setInterval(() => {
 				this.renderClock();
-			}, Number(this.host.settings.updateIntervalMilliseconds)),
+			}, this.host.settings.updateIntervalMilliseconds),
 		);
 	}
 

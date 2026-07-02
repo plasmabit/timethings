@@ -4,7 +4,7 @@ import { ActivityService } from "./features/activity/activity.service";
 import { MetadataUpdateService } from "./features/activity/metadata-update.service";
 import { ClockStatusService } from "./features/clock/clock-status.service";
 import { MostEditedView } from "./features/most-edited/most-edited.view";
-import { DEFAULT_SETTINGS } from "./settings/settings.defaults";
+import { DEFAULT_SETTINGS, normalizeUpdateInterval } from "./settings/settings.defaults";
 import { TimeThingsSettings } from "./settings/settings.types";
 import { TimeThingsSettingsTab } from "./settings/settings.tab";
 
@@ -28,6 +28,9 @@ export default class TimeThings extends Plugin {
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings.updateIntervalMilliseconds = normalizeUpdateInterval(
+			this.settings.updateIntervalMilliseconds,
+		);
 	}
 
 	async saveSettings() {

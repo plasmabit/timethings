@@ -3,6 +3,7 @@ import { SETTINGS_LINKS } from "../constants/plugin.constants";
 import { normalizeIgnorePath } from "../utils/ignore-rules";
 import { FileInputSuggest } from "./suggesters/file-input-suggest";
 import { FolderInputSuggest } from "./suggesters/folder-input-suggest";
+import { normalizeUpdateInterval } from "./settings.defaults";
 import { TimeThingsSettings, TimeThingsSettingsManager } from "./settings.types";
 
 type SettingsTabPlugin = Plugin & TimeThingsSettingsManager;
@@ -78,9 +79,12 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				"Update interval",
 				"In milliseconds. Restart plugin for this setting to take effect.",
 				"1000",
-				this.plugin.settings.updateIntervalMilliseconds,
+				String(this.plugin.settings.updateIntervalMilliseconds),
 				async (value) => {
-					await this.updateSetting("updateIntervalMilliseconds", value);
+					await this.updateSetting(
+						"updateIntervalMilliseconds",
+						normalizeUpdateInterval(value),
+					);
 				},
 			);
 

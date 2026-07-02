@@ -4,7 +4,7 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	useCustomFrontmatterHandlingSolution: false,
 	showEmojiStatusBar: true,
 	clockFormat: "hh:mm A",
-	updateIntervalMilliseconds: "1000",
+	updateIntervalMilliseconds: 1000,
 	enableClock: true,
 	isUTC: false,
 	modifiedKeyName: "updated_at",
@@ -16,7 +16,14 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	nonTypingEditingTimePercentage: 22,
 	ignoredFolders: [],
 	ignoredFiles: [],
-	enableSwitch: false,
-	switchKey: "timethings.switch",
-	switchKeyValue: "true",
 };
+
+export function normalizeUpdateInterval(value: unknown): number {
+	const parsed = typeof value === "string" ? Number(value) : value;
+
+	if (typeof parsed !== "number" || !Number.isFinite(parsed)) {
+		return DEFAULT_SETTINGS.updateIntervalMilliseconds;
+	}
+
+	return Math.max(100, Math.round(parsed));
+}

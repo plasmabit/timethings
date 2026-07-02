@@ -1,4 +1,4 @@
-import { App, EventRef, MarkdownView } from "obsidian";
+import { App, EventRef, MarkdownView, TFile } from "obsidian";
 import { DOM_EVENTS, IGNORED_EDITOR_KEYS, VAULT_EVENTS } from "../../constants/plugin.constants";
 import { TimeThingsSettings } from "../../settings/settings.types";
 import { MetadataUpdateService } from "./metadata-update.service";
@@ -53,18 +53,22 @@ export class ActivityService {
 
 	private registerFrontmatterActivityHandler() {
 		this.host.registerEvent(
-			this.host.app.vault.on(VAULT_EVENTS.modify, () => {
+			this.host.app.vault.on(VAULT_EVENTS.modify, (file) => {
 				if (this.host.settings.useCustomFrontmatterHandlingSolution) {
+					return;
+				}
+
+				if (!(file instanceof TFile)) {
 					return;
 				}
 
 				const activeView = this.host.app.workspace.getActiveViewOfType(MarkdownView);
 
-				if (activeView?.file === null || activeView?.file === undefined) {
+				if (activeView?.file !== file) {
 					return;
 				}
 
-				void this.metadataUpdateService.updateFileMetadata(activeView.file);
+				void this.metadataUpdateService.updateFileMetadata(file);
 			}),
 		);
 	}

@@ -1,10 +1,10 @@
 export const VIEW_TYPES = {
-	mostEdited: "example-view",
+	mostEdited: "timethings-most-edited",
 } as const;
 
 export const COMMANDS = {
 	mostEditedNotes: {
-		id: "Show most edited notes view",
+		id: "open-most-edited-view",
 		name: "Most edited notes",
 	},
 } as const;
@@ -12,7 +12,7 @@ export const COMMANDS = {
 export const RIBBON_COMMANDS = {
 	mostEditedNotes: {
 		icon: "history",
-		label: "Activate view",
+		label: "Open most edited notes",
 	},
 } as const;
 
