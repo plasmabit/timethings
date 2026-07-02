@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	getNestedFrontmatterValue,
 	setNestedFrontmatterValue,
-} from "../src/utils/frontmatter-path";
+} from "../src/shared/lib/frontmatter";
 
 describe("getNestedFrontmatterValue", () => {
 	it("gets a top-level value", () => {

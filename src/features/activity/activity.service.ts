@@ -1,6 +1,6 @@
 import { App, EventRef, MarkdownView, TFile } from "obsidian";
-import { DOM_EVENTS, IGNORED_EDITOR_KEYS, VAULT_EVENTS } from "../../constants/plugin.constants";
-import { TimeThingsSettings } from "../../settings/settings.types";
+import type { TimeThingsSettings } from "../../shared/config";
+import { IGNORED_EDITOR_KEYS } from "./activity.constants";
 import { MetadataUpdateService } from "./metadata-update.service";
 
 interface ActivityServiceHost {
@@ -27,7 +27,7 @@ export class ActivityService {
 	}
 
 	private registerEditorActivityHandler() {
-		this.host.registerDomEvent(document, DOM_EVENTS.keyUp, (event) => {
+		this.host.registerDomEvent(document, "keyup", (event) => {
 			if (!(event instanceof KeyboardEvent)) {
 				return;
 			}
@@ -53,7 +53,7 @@ export class ActivityService {
 
 	private registerFrontmatterActivityHandler() {
 		this.host.registerEvent(
-			this.host.app.vault.on(VAULT_EVENTS.modify, (file) => {
+			this.host.app.vault.on("modify", (file) => {
 				if (this.host.settings.useCustomFrontmatterHandlingSolution) {
 					return;
 				}

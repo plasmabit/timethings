@@ -1,10 +1,12 @@
 import { App, Plugin, PluginSettingTab, SearchComponent, Setting } from "obsidian";
-import { SETTINGS_LINKS } from "../constants/plugin.constants";
-import { normalizeIgnorePath } from "../utils/ignore-rules";
-import { FileInputSuggest } from "./suggesters/file-input-suggest";
-import { FolderInputSuggest } from "./suggesters/folder-input-suggest";
-import { normalizeUpdateInterval } from "./settings.defaults";
-import { TimeThingsSettings, TimeThingsSettingsManager } from "./settings.types";
+import {
+	normalizeUpdateInterval,
+	type TimeThingsSettings,
+	type TimeThingsSettingsManager,
+} from "../../shared/config";
+import { normalizeIgnorePath } from "../../shared/lib/ignore";
+import { FileInputSuggest, FolderInputSuggest } from "../../shared/ui/suggesters";
+import { SETTINGS_LINKS } from "./settings-tab.constants";
 
 type SettingsTabPlugin = Plugin & TimeThingsSettingsManager;
 

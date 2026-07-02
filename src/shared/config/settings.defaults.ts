@@ -1,4 +1,4 @@
-import { TimeThingsSettings } from "./settings.types";
+import type { TimeThingsSettings } from "./settings.types";
 
 export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	useCustomFrontmatterHandlingSolution: false,

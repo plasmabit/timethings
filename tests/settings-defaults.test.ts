@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeUpdateInterval } from "../src/settings/settings.defaults";
+import { normalizeUpdateInterval } from "../src/shared/config";
 
 describe("normalizeUpdateInterval", () => {
 	it.each([

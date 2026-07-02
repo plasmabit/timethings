@@ -4,7 +4,7 @@ import {
 	formatMomentAsClock,
 	formatMomentAsClockEmoji,
 	formatSeconds,
-} from "../src/utils/time-format";
+} from "../src/shared/lib/datetime";
 
 describe("formatMomentAsClockEmoji", () => {
 	it.each([

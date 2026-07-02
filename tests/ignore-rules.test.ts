@@ -5,7 +5,7 @@ import {
 	isFileIgnored,
 	normalizeIgnorePath,
 	parseIgnoreList,
-} from "../src/utils/ignore-rules";
+} from "../src/shared/lib/ignore";
 
 function file(path: string): TFile {
 	const result = new TFile();

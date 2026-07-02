@@ -1,13 +1,14 @@
 import { App, Editor, TFile, moment } from "obsidian";
-import { COOLDOWN_DURATIONS } from "../../constants/plugin.constants";
-import { TimeThingsSettings } from "../../settings/settings.types";
+import type { TimeThingsSettings } from "../../shared/config";
 import {
 	findFrontmatterFieldLine,
 	readFrontmatterFieldValueAtLine,
 	setFrontmatterFieldValue,
-} from "../../utils/editor-frontmatter";
-import { getNestedFrontmatterValue, setNestedFrontmatterValue } from "../../utils/frontmatter-path";
-import { isFileIgnored } from "../../utils/ignore-rules";
+	getNestedFrontmatterValue,
+	setNestedFrontmatterValue,
+} from "../../shared/lib/frontmatter";
+import { isFileIgnored } from "../../shared/lib/ignore";
+import { COOLDOWN_DURATIONS } from "./activity.constants";
 
 type SettingsAccessor = () => TimeThingsSettings;
 

@@ -1,7 +1,7 @@
 import { moment } from "obsidian";
-import { STATUS_BAR } from "../../constants/plugin.constants";
-import { TimeThingsSettings } from "../../settings/settings.types";
-import { formatMomentAsClock, formatMomentAsClockEmoji } from "../../utils/time-format";
+import type { TimeThingsSettings } from "../../shared/config";
+import { formatMomentAsClock, formatMomentAsClockEmoji } from "../../shared/lib/datetime";
+import { STATUS_BAR } from "./clock.constants";
 
 interface ClockStatusHost {
 	settings: TimeThingsSettings;

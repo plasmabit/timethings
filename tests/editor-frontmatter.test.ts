@@ -6,7 +6,7 @@ import {
 	hasFrontmatter,
 	readFrontmatterFieldValueAtLine,
 	setFrontmatterFieldValue,
-} from "../src/utils/editor-frontmatter";
+} from "../src/shared/lib/frontmatter";
 import { FakeEditor } from "./helpers/fake-editor";
 
 function editor(value: string): Editor {

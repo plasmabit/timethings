@@ -1,13 +1,7 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
-import {
-	MOST_EDITED_VIEW,
-	MOST_EDITED_VIEW_CLASSES,
-	VIEW_TYPES,
-	WORKSPACE_EVENTS,
-	WORKSPACE_LEAF_TYPES,
-} from "../../constants/plugin.constants";
-import { TimeThingsSettings } from "../../settings/settings.types";
-import { formatSeconds } from "../../utils/time-format";
+import { MOST_EDITED_VIEW, MOST_EDITED_VIEW_CLASSES, VIEW_TYPES } from "./most-edited.constants";
+import type { TimeThingsSettings } from "../../shared/config";
+import { formatSeconds } from "../../shared/lib/datetime";
 import { MostEditedEntry, MostEditedService } from "./most-edited.service";
 
 export class MostEditedView extends ItemView {
@@ -89,7 +83,7 @@ export class MostEditedView extends ItemView {
 		);
 
 		row.addEventListener("mouseover", (event: MouseEvent) => {
-			this.app.workspace.trigger(WORKSPACE_EVENTS.hoverLink, {
+			this.app.workspace.trigger("hover-link", {
 				event,
 				source: VIEW_TYPES.mostEdited,
 				hoverParent: row,
@@ -112,7 +106,7 @@ export class MostEditedView extends ItemView {
 
 	private getTargetLeaf(): WorkspaceLeaf {
 		const existingMarkdownLeaf = this.app.workspace
-			.getLeavesOfType(WORKSPACE_LEAF_TYPES.markdown)
+			.getLeavesOfType("markdown")
 			.find((leaf) => leaf !== this.leaf);
 
 		if (existingMarkdownLeaf instanceof WorkspaceLeaf) {

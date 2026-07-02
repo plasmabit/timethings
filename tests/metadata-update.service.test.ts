@@ -2,8 +2,7 @@ import type { App, Editor } from "obsidian";
 import { TFile, moment } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MetadataUpdateService } from "../src/features/activity/metadata-update.service";
-import { DEFAULT_SETTINGS } from "../src/settings/settings.defaults";
-import type { TimeThingsSettings } from "../src/settings/settings.types";
+import { DEFAULT_SETTINGS, type TimeThingsSettings } from "../src/shared/config";
 import { FakeEditor } from "./helpers/fake-editor";
 
 function file(path = "Notes/test.md"): TFile {
