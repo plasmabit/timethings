@@ -28,10 +28,16 @@ export default class TimeThings extends Plugin {
 	onunload() {}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const raw =
+			(await this.loadData()) as Partial<TimeThingsSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, raw);
 		this.settings.updateIntervalMilliseconds = normalizeUpdateInterval(
 			this.settings.updateIntervalMilliseconds,
 		);
+		// Migrate isUTC: true → clockTimezone: "UTC"
+		if (raw?.isUTC && !raw.clockTimezone) {
+			this.settings.clockTimezone = "UTC";
+		}
 	}
 
 	async saveSettings() {
@@ -44,7 +50,10 @@ export default class TimeThings extends Plugin {
 	}
 
 	private initializeServices() {
-		const metadataUpdateService = new MetadataUpdateService(this.app, () => this.settings);
+		const metadataUpdateService = new MetadataUpdateService(
+			this.app,
+			() => this.settings,
+		);
 
 		this.activityService = new ActivityService(this, metadataUpdateService);
 		this.clockStatusService = new ClockStatusService(this);
@@ -83,7 +92,9 @@ export default class TimeThings extends Plugin {
 
 	private async activateMostEditedNotesView() {
 		const { workspace } = this.app;
-		const existingLeaf = workspace.getLeavesOfType(VIEW_TYPES.mostEdited)[0];
+		const existingLeaf = workspace.getLeavesOfType(
+			VIEW_TYPES.mostEdited,
+		)[0];
 		const leaf = existingLeaf ?? workspace.getRightLeaf(false);
 
 		if (!(leaf instanceof WorkspaceLeaf)) {

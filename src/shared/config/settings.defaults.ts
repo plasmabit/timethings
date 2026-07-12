@@ -7,6 +7,8 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	updateIntervalMilliseconds: 1000,
 	enableClock: true,
 	isUTC: false,
+	clockTimezone: "",
+	frontmatterTimezone: "",
 	modifiedKeyName: "updated_at",
 	modifiedKeyFormat: "YYYY-MM-DD[T]HH:mm:ss.SSSZ",
 	enableModifiedKeyUpdate: true,

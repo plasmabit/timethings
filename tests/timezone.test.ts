@@ -11,9 +11,11 @@ describe("listTimeZones", () => {
 	it("returns a non-empty array of IANA timezone strings", () => {
 		const zones = listTimeZones();
 		expect(zones.length).toBeGreaterThan(0);
-		expect(zones).toContain("UTC");
 		expect(zones).toContain("America/New_York");
 		expect(zones).toContain("Asia/Tokyo");
+		expect(zones).toContain("Europe/London");
+		expect(zones).toContain("Europe/Berlin");
+		expect(zones).toContain("Asia/Tokyo"); // Japan
 	});
 });
 

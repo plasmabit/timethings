@@ -1,11 +1,21 @@
-import { App, Plugin, PluginSettingTab, SearchComponent, Setting } from "obsidian";
+import {
+	App,
+	Plugin,
+	PluginSettingTab,
+	SearchComponent,
+	Setting,
+} from "obsidian";
 import {
 	normalizeUpdateInterval,
 	type TimeThingsSettings,
 	type TimeThingsSettingsManager,
 } from "../../shared/config";
 import { normalizeIgnorePath } from "../../shared/lib/ignore";
-import { FileInputSuggest, FolderInputSuggest } from "../../shared/ui/suggesters";
+import {
+	FileInputSuggest,
+	FolderInputSuggest,
+} from "../../shared/ui/suggesters";
+import { listTimeZones } from "../../timezone";
 import { SETTINGS_LINKS } from "./settings-tab.constants";
 
 type SettingsTabPlugin = Plugin & TimeThingsSettingsManager;
@@ -35,13 +45,21 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			"Smoother experience. Prone to bugs if you use a nested value.",
 			this.plugin.settings.useCustomFrontmatterHandlingSolution,
 			async (value) => {
-				await this.updateSetting("useCustomFrontmatterHandlingSolution", value, true);
+				await this.updateSetting(
+					"useCustomFrontmatterHandlingSolution",
+					value,
+					true,
+				);
 			},
 		);
 	}
 
 	private renderStatusBarSection(containerEl: HTMLElement) {
-		this.createSection(containerEl, "Status bar", "Displays clock in the status bar");
+		this.createSection(
+			containerEl,
+			"Status bar",
+			"Displays clock in the status bar",
+		);
 		this.createSubsectionTitle(containerEl, "🕰️ Clock");
 
 		this.addToggleSetting(
@@ -90,20 +108,24 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				},
 			);
 
-			this.addToggleSetting(
+			this.addTimezoneSetting(
 				containerEl,
-				"UTC timezone",
-				"Use UTC instead of local time?",
-				this.plugin.settings.isUTC,
+				"Clock timezone",
+				"IANA timezone for the status-bar clock. Empty = system timezone.",
+				this.plugin.settings.clockTimezone,
 				async (value) => {
-					await this.updateSetting("isUTC", value);
+					await this.updateSetting("clockTimezone", value);
 				},
 			);
 		}
 	}
 
 	private renderFrontmatterSection(containerEl: HTMLElement) {
-		this.createSection(containerEl, "Frontmatter", "Handles timestamp keys in frontmatter.");
+		this.createSection(
+			containerEl,
+			"Frontmatter",
+			"Handles timestamp keys in frontmatter.",
+		);
 		this.renderModifiedKeySection(containerEl);
 		this.renderEditDurationSection(containerEl);
 		this.renderIgnoreSection(containerEl);
@@ -118,7 +140,11 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			"",
 			this.plugin.settings.enableModifiedKeyUpdate,
 			async (value) => {
-				await this.updateSetting("enableModifiedKeyUpdate", value, true);
+				await this.updateSetting(
+					"enableModifiedKeyUpdate",
+					value,
+					true,
+				);
 			},
 		);
 
@@ -148,6 +174,16 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			},
 		);
 
+		this.addTimezoneSetting(
+			containerEl,
+			"Frontmatter timezone",
+			"IANA timezone for the modified timestamp. Empty = system timezone.",
+			this.plugin.settings.frontmatterTimezone,
+			async (value) => {
+				await this.updateSetting("frontmatterTimezone", value);
+			},
+		);
+
 		if (!this.plugin.settings.useCustomFrontmatterHandlingSolution) {
 			this.addSliderSetting(
 				containerEl,
@@ -158,7 +194,10 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				1,
 				this.plugin.settings.updateIntervalFrontmatterMinutes,
 				async (value) => {
-					await this.updateSetting("updateIntervalFrontmatterMinutes", value);
+					await this.updateSetting(
+						"updateIntervalFrontmatterMinutes",
+						value,
+					);
 				},
 			);
 		}
@@ -204,7 +243,10 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			2,
 			this.plugin.settings.nonTypingEditingTimePercentage,
 			async (value) => {
-				await this.updateSetting("nonTypingEditingTimePercentage", value);
+				await this.updateSetting(
+					"nonTypingEditingTimePercentage",
+					value,
+				);
 			},
 		);
 	}
@@ -258,7 +300,11 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		);
 	}
 
-	private createSection(containerEl: HTMLElement, title: string, description: string) {
+	private createSection(
+		containerEl: HTMLElement,
+		title: string,
+		description: string,
+	) {
 		const titleElement = containerEl.createEl("p");
 
 		titleElement.createEl("strong", { text: title });
@@ -334,6 +380,26 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			);
 	}
 
+	private addTimezoneSetting(
+		containerEl: HTMLElement,
+		name: string,
+		description: string,
+		value: string,
+		onChange: (value: string) => Promise<void>,
+	) {
+		new Setting(containerEl)
+			.setName(name)
+			.setDesc(description)
+			.addDropdown((dd) => {
+				dd.addOption("", "System default");
+				for (const tz of listTimeZones()) dd.addOption(tz, tz);
+				dd.setValue(value);
+				dd.onChange(async (newValue) => {
+					await onChange(newValue);
+				});
+			});
+	}
+
 	private renderPathListSetting(
 		containerEl: HTMLElement,
 		name: string,
@@ -365,7 +431,9 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 						}
 
 						const normalizedValue = normalizeIgnorePath(rawValue);
-						const nextValues = Array.from(new Set([...currentValues, normalizedValue]));
+						const nextValues = Array.from(
+							new Set([...currentValues, normalizedValue]),
+						);
 
 						await onChange(nextValues);
 						searchComponent?.setValue("");
@@ -376,7 +444,9 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		for (const currentValue of currentValues) {
 			new Setting(containerEl).setName(currentValue).addButton((button) =>
 				button.setButtonText("Remove").onClick(async () => {
-					await onChange(currentValues.filter((value) => value !== currentValue));
+					await onChange(
+						currentValues.filter((value) => value !== currentValue),
+					);
 					this.display();
 				}),
 			);
