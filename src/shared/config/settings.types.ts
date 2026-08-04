@@ -4,9 +4,17 @@ export interface TimeThingsSettings {
 	clockFormat: string;
 	updateIntervalMilliseconds: number;
 	enableClock: boolean;
+	/** @deprecated Use clockTimezone instead. Kept for migration only. */
 	isUTC: boolean;
+	timezoneSettingsMigrated: boolean;
+	clockUseUtc: boolean;
+	clockTimezone: string;
+	frontmatterUseUtc: boolean;
+	frontmatterTimezone: string;
 	modifiedKeyName: string;
 	modifiedKeyFormat: string;
+	frontmatterFormatMigrated: boolean;
+	frontmatterUseIso: boolean;
 	enableModifiedKeyUpdate: boolean;
 	updateIntervalFrontmatterMinutes: number;
 	editDurationPath: string;

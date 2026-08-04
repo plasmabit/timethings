@@ -26,13 +26,16 @@ Show clock in status bar. Sync modified file property with frontmatter.
 
 - Option to change the date format. Recommended: `HH:mm:ss` and `hh:mm A`.
 - Option to change update interval.
-- Option to use UTC timezone.
+- Search for an IANA timezone by region or city, or use the system timezone.
+- Option to override the selected timezone with UTC.
 
 ## Modified frontmatter key
 
 - Have a key that records the time when you last modified a file.
 - Supports nesting.
-- Option to change the date format. Recommended: `YYYY-MM-DD[T]HH:mm:ss.SSSZ`.
+- Option to use a custom timestamp format.
+- Option to override the custom format with ISO 8601.
+- Writes timestamps with the selected IANA timezone or UTC.
 
 ## Edit duration frontmatter key
 
@@ -41,8 +44,8 @@ Show clock in status bar. Sync modified file property with frontmatter.
 
 ## Format tokens
 
-Clock and modified-timestamp formats support the following tokens. Text inside square
-brackets is emitted literally.
+Clock and custom modified-timestamp formats support the following tokens. Text inside
+square brackets is emitted literally.
 
 | Token | Meaning |
 | --- | --- |
@@ -83,5 +86,5 @@ I may improve it further in the future, but for that I feel like I'd have to wri
 - [x] Ignore files in specified folders
 - [x] Track time spent editing a note
 - [ ] Ingore files with specified frontmatter keys (and their values)
-- [ ] Pick a timezone for all things globally
-- [ ] Pick a timezone for clock and frontmatter seperately
+- [x] Pick a timezone for all things globally
+- [x] Pick a timezone for clock and frontmatter separately

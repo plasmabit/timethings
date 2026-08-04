@@ -3,11 +3,7 @@ import { ActivityService, MetadataUpdateService } from "../features/activity";
 import { ClockStatusService } from "../features/clock";
 import { MostEditedView, VIEW_TYPES } from "../features/most-edited";
 import { TimeThingsSettingsTab } from "../features/settings-tab";
-import {
-	DEFAULT_SETTINGS,
-	normalizeUpdateInterval,
-	type TimeThingsSettings,
-} from "../shared/config";
+import { DEFAULT_SETTINGS, migrateSettings, type TimeThingsSettings } from "../shared/config";
 
 export default class TimeThings extends Plugin {
 	settings: TimeThingsSettings = DEFAULT_SETTINGS;
@@ -28,10 +24,13 @@ export default class TimeThings extends Plugin {
 	onunload() {}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-		this.settings.updateIntervalMilliseconds = normalizeUpdateInterval(
-			this.settings.updateIntervalMilliseconds,
-		);
+		const raw = (await this.loadData()) as Partial<TimeThingsSettings> | null;
+		const migration = migrateSettings(raw);
+		this.settings = migration.settings;
+
+		if (migration.didMigrate) {
+			await this.saveSettings();
+		}
 	}
 
 	async saveSettings() {

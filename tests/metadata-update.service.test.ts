@@ -57,14 +57,55 @@ describe("updateFileMetadata", () => {
 	});
 
 	it("updates an old modified timestamp", async () => {
-		const old = formatTimestamp(now(false).subtract({ minutes: 2 }), DEFAULT_SETTINGS.modifiedKeyFormat);
+		const old = formatTimestamp(
+			now(false).subtract({ minutes: 2 }),
+			DEFAULT_SETTINGS.modifiedKeyFormat,
+		);
 		const { frontmatter, service } = setup(
 			{ updated_at: old },
 			{ enableEditDurationKey: false },
 		);
 		await service.updateFileMetadata(file());
 		expect(frontmatter.updated_at).not.toBe(old);
-		expect(parseTimestampStrict(frontmatter.updated_at as string, DEFAULT_SETTINGS.modifiedKeyFormat)).toBeDefined();
+		expect(
+			parseTimestampStrict(
+				frontmatter.updated_at as string,
+				DEFAULT_SETTINGS.modifiedKeyFormat,
+			),
+		).toBeDefined();
+	});
+
+	it("writes the selected IANA offset as ISO 8601", async () => {
+		vi.setSystemTime(new Date("2024-01-02T08:30:45.678Z"));
+		const { frontmatter, service } = setup(
+			{ updated_at: "2000-01-01T00:00:00.000+00:00" },
+			{
+				enableEditDurationKey: false,
+				frontmatterTimezone: "Asia/Kolkata",
+				modifiedKeyFormat: "YYYY",
+			},
+		);
+
+		await service.updateFileMetadata(file());
+
+		expect(frontmatter.updated_at).toBe("2024-01-02T14:00:45.678+05:30");
+	});
+
+	it("writes a custom format when ISO is disabled", async () => {
+		vi.setSystemTime(new Date("2024-01-02T08:30:45.678Z"));
+		const { frontmatter, service } = setup(
+			{ updated_at: "2000/01/01 00:00" },
+			{
+				enableEditDurationKey: false,
+				frontmatterTimezone: "UTC",
+				modifiedKeyFormat: "YYYY/MM/DD HH:mm",
+				frontmatterUseIso: false,
+			},
+		);
+
+		await service.updateFileMetadata(file());
+
+		expect(frontmatter.updated_at).toBe("2024/01/02 08:30");
 	});
 
 	it("keeps a fresh modified timestamp", async () => {
@@ -83,7 +124,12 @@ describe("updateFileMetadata", () => {
 			const initial = value === undefined ? {} : { updated_at: value };
 			const { frontmatter, service } = setup(initial, { enableEditDurationKey: false });
 			await service.updateFileMetadata(file());
-			expect(parseTimestampStrict(frontmatter.updated_at as string, DEFAULT_SETTINGS.modifiedKeyFormat)).toBeDefined();
+			expect(
+				parseTimestampStrict(
+					frontmatter.updated_at as string,
+					DEFAULT_SETTINGS.modifiedKeyFormat,
+				),
+			).toBeDefined();
 		},
 	);
 
@@ -127,13 +173,50 @@ describe("updateEditorMetadata", () => {
 	});
 
 	it("updates a strictly valid modified timestamp", async () => {
-		const old = formatTimestamp(now(false).subtract({ minutes: 1 }), DEFAULT_SETTINGS.modifiedKeyFormat);
+		const old = formatTimestamp(
+			now(false).subtract({ minutes: 1 }),
+			DEFAULT_SETTINGS.modifiedKeyFormat,
+		);
 		const { service } = setup({}, { enableEditDurationKey: false });
 		const fake = new FakeEditor(["---", `updated_at: ${old}`, "---"]);
 		await service.updateEditorMetadata(file(), fake as unknown as Editor);
 		const updated = fake.getLine(1).slice("updated_at: ".length);
 		expect(updated).not.toBe(old);
 		expect(parseTimestampStrict(updated, DEFAULT_SETTINGS.modifiedKeyFormat)).toBeDefined();
+	});
+
+	it("uses UTC override in the custom editor path", async () => {
+		vi.setSystemTime(new Date("2024-01-02T08:30:45.678Z"));
+		const { service } = setup(
+			{},
+			{
+				enableEditDurationKey: false,
+				frontmatterTimezone: "Asia/Kolkata",
+				frontmatterUseUtc: true,
+			},
+		);
+		const fake = new FakeEditor(["---", "updated_at: 2000-01-01T00:00:00.000+00:00", "---"]);
+
+		await service.updateEditorMetadata(file(), fake as unknown as Editor);
+
+		expect(fake.getLine(1)).toBe("updated_at: 2024-01-02T08:30:45.678+00:00");
+	});
+
+	it("converts a legacy custom timestamp format to ISO 8601", async () => {
+		vi.setSystemTime(new Date("2024-01-02T08:30:45.678Z"));
+		const { service } = setup(
+			{},
+			{
+				enableEditDurationKey: false,
+				modifiedKeyFormat: "YYYY/MM/DD HH:mm",
+				frontmatterTimezone: "UTC",
+			},
+		);
+		const fake = new FakeEditor(["---", "updated_at: 2000/01/01 00:00", "---"]);
+
+		await service.updateEditorMetadata(file(), fake as unknown as Editor);
+
+		expect(fake.getLine(1)).toBe("updated_at: 2024-01-02T08:30:45.678+00:00");
 	});
 
 	it("leaves an invalid editor timestamp unchanged", async () => {

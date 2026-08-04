@@ -5,7 +5,12 @@ import {
 	type TimeThingsSettingsManager,
 } from "../../shared/config";
 import { normalizeIgnorePath } from "../../shared/lib/ignore";
-import { FileInputSuggest, FolderInputSuggest } from "../../shared/ui/suggesters";
+import {
+	FileInputSuggest,
+	FolderInputSuggest,
+	TimezoneInputSuggest,
+} from "../../shared/ui/suggesters";
+import { listTimeZones } from "../../timezone";
 import { SETTINGS_LINKS } from "./settings-tab.constants";
 
 type SettingsTabPlugin = Plugin & TimeThingsSettingsManager;
@@ -90,13 +95,17 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				},
 			);
 
-			this.addToggleSetting(
+			this.addTimezoneSetting(
 				containerEl,
-				"UTC timezone",
-				"Use UTC instead of local time?",
-				this.plugin.settings.isUTC,
+				"Clock timezone",
+				"Search by region or city. Empty = system timezone.",
+				this.plugin.settings.clockTimezone,
+				this.plugin.settings.clockUseUtc,
 				async (value) => {
-					await this.updateSetting("isUTC", value);
+					await this.updateSetting("clockTimezone", value);
+				},
+				async (value) => {
+					await this.updateSetting("clockUseUtc", value);
 				},
 			);
 		}
@@ -137,14 +146,29 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			},
 		);
 
-		this.addTextSetting(
+		this.addFrontmatterFormatSetting(
 			containerEl,
-			"Modified key format",
-			this.createFormatTokenLink(),
-			"YYYY-MM-DD[T]HH:mm:ss.SSSZ",
 			this.plugin.settings.modifiedKeyFormat,
+			this.plugin.settings.frontmatterUseIso,
 			async (value) => {
 				await this.updateSetting("modifiedKeyFormat", value);
+			},
+			async (value) => {
+				await this.updateSetting("frontmatterUseIso", value);
+			},
+		);
+
+		this.addTimezoneSetting(
+			containerEl,
+			"Frontmatter timezone",
+			"Search by region or city. Empty = system timezone.",
+			this.plugin.settings.frontmatterTimezone,
+			this.plugin.settings.frontmatterUseUtc,
+			async (value) => {
+				await this.updateSetting("frontmatterTimezone", value);
+			},
+			async (value) => {
+				await this.updateSetting("frontmatterUseUtc", value);
 			},
 		);
 
@@ -331,6 +355,104 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 					.onChange(async (newValue) => {
 						await onChange(newValue);
 					}),
+			);
+	}
+
+	private addTimezoneSetting(
+		containerEl: HTMLElement,
+		name: string,
+		description: string,
+		value: string,
+		useUtc: boolean,
+		onTimezoneChange: (value: string) => Promise<void>,
+		onUtcChange: (value: boolean) => Promise<void>,
+	) {
+		const group = containerEl.createDiv({ cls: "setting-item tt-setting-group" });
+		let searchComponent: SearchComponent;
+
+		const timezoneSetting = new Setting(group)
+			.setName(name)
+			.setDesc(description)
+			.addSearch((search) => {
+				searchComponent = search;
+				search
+					.setPlaceholder("System default")
+					.setValue(value)
+					.setDisabled(useUtc)
+					.onChange(async (newValue) => {
+						if (newValue.length === 0) {
+							await onTimezoneChange("");
+						}
+					});
+
+				return new TimezoneInputSuggest(
+					this.app,
+					search.inputEl,
+					listTimeZones(),
+					(selectedTimezone) => {
+						void onTimezoneChange(selectedTimezone);
+					},
+				);
+			});
+		const applyUtcState = (enabled: boolean) => {
+			searchComponent.setDisabled(enabled);
+			timezoneSetting.settingEl.classList.toggle("tt-setting-overridden", enabled);
+		};
+
+		applyUtcState(useUtc);
+
+		group.createEl("hr", { cls: "tt-setting-separator" });
+
+		new Setting(group)
+			.setName("Use UTC")
+			.setDesc("Overrides the selected timezone.")
+			.addToggle((toggle) => {
+				toggle.setValue(useUtc).onChange(async (newValue) => {
+					await onUtcChange(newValue);
+					applyUtcState(newValue);
+				});
+			});
+	}
+
+	private addFrontmatterFormatSetting(
+		containerEl: HTMLElement,
+		value: string,
+		useIso: boolean,
+		onFormatChange: (value: string) => Promise<void>,
+		onIsoChange: (value: boolean) => Promise<void>,
+	) {
+		const group = containerEl.createDiv({ cls: "setting-item tt-setting-group" });
+		let setFormatDisabled: (disabled: boolean) => void;
+
+		const formatSetting = new Setting(group)
+			.setName("Modified key format")
+			.setDesc(this.createFormatTokenLink())
+			.addText((text) => {
+				setFormatDisabled = (disabled) => text.setDisabled(disabled);
+				text.setPlaceholder("YYYY-MM-DD[T]HH:mm:ss.SSSZ")
+					.setValue(value)
+					.setDisabled(useIso)
+					.onChange(async (newValue) => {
+						await onFormatChange(newValue);
+					});
+			});
+		const applyIsoState = (enabled: boolean) => {
+			setFormatDisabled(enabled);
+			formatSetting.settingEl.classList.toggle("tt-setting-overridden", enabled);
+		};
+
+		applyIsoState(useIso);
+
+		group.createEl("hr", { cls: "tt-setting-separator" });
+
+		new Setting(group)
+			.setName("Use ISO 8601")
+			.setDesc("Overrides the custom modified timestamp format.")
+			.addToggle((toggle) =>
+				toggle.setValue(useIso).onChange(async (newValue) => {
+					await onIsoChange(newValue);
+					applyIsoState(newValue);
+				}),
 			);
 	}
 
