@@ -42,20 +42,16 @@ export class MostEditedView extends ItemView {
 	}
 
 	private renderHeader(totalEditedSeconds: number) {
-		const header = this.contentEl.createEl("div");
+		const header = this.contentEl.createDiv();
 
-		header.appendChild(this.contentEl.createEl("h2", { text: MOST_EDITED_VIEW.title }));
-		header.appendChild(
-			this.contentEl.createEl("p", {
-				text:
-					MOST_EDITED_VIEW.totalTimePrefix +
-					formatDurationHoursMinutes(totalEditedSeconds),
-			}),
-		);
+		header.createEl("h2", { text: MOST_EDITED_VIEW.title });
+		header.createEl("p", {
+			text: MOST_EDITED_VIEW.totalTimePrefix + formatDurationHoursMinutes(totalEditedSeconds),
+		});
 	}
 
 	private renderEntries(entries: readonly MostEditedEntry[]) {
-		const wrapper = this.contentEl.createEl("div", {
+		const wrapper = this.contentEl.createDiv({
 			cls: MOST_EDITED_VIEW_CLASSES.wrapper,
 		});
 
@@ -65,22 +61,18 @@ export class MostEditedView extends ItemView {
 	}
 
 	private renderEntryRow(wrapper: HTMLElement, entry: MostEditedEntry) {
-		const row = wrapper.createEl("div", {
+		const row = wrapper.createDiv({
 			cls: MOST_EDITED_VIEW_CLASSES.row,
 		});
 
-		row.appendChild(
-			createEl("div", {
-				text: entry.file.basename,
-				cls: MOST_EDITED_VIEW_CLASSES.title,
-			}),
-		);
-		row.appendChild(
-			createEl("div", {
-				text: formatDurationHoursMinutes(entry.editedSeconds),
-				cls: MOST_EDITED_VIEW_CLASSES.value,
-			}),
-		);
+		row.createDiv({
+			text: entry.file.basename,
+			cls: MOST_EDITED_VIEW_CLASSES.title,
+		});
+		row.createDiv({
+			text: formatDurationHoursMinutes(entry.editedSeconds),
+			cls: MOST_EDITED_VIEW_CLASSES.value,
+		});
 
 		row.addEventListener("mouseover", (event: MouseEvent) => {
 			this.app.workspace.trigger("hover-link", {

@@ -16,6 +16,8 @@ interface ActivityServiceHost {
 }
 
 export class ActivityService {
+	private readonly handledDocuments = new WeakSet<Document>();
+
 	constructor(
 		private readonly host: ActivityServiceHost,
 		private readonly metadataUpdateService: MetadataUpdateService,
@@ -27,7 +29,22 @@ export class ActivityService {
 	}
 
 	private registerEditorActivityHandler() {
-		this.host.registerDomEvent(document, "keyup", (event) => {
+		this.registerKeyupHandler(document);
+
+		this.host.registerEvent(
+			this.host.app.workspace.on("window-open", (workspaceWindow) => {
+				this.registerKeyupHandler(workspaceWindow.doc);
+			}),
+		);
+	}
+
+	private registerKeyupHandler(doc: Document) {
+		if (this.handledDocuments.has(doc)) {
+			return;
+		}
+		this.handledDocuments.add(doc);
+
+		this.host.registerDomEvent(doc, "keyup", (event) => {
 			if (!(event instanceof KeyboardEvent)) {
 				return;
 			}

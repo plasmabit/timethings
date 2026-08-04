@@ -272,26 +272,26 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 	}
 
 	private createFormatTokenLink() {
-		const fragment = document.createDocumentFragment();
-		const link = document.createElement("a");
+		const fragment = createFragment();
 
-		link.href = SETTINGS_LINKS.formatTokenDocs;
-		link.textContent = "Supported date format tokens";
-		fragment.append(link);
+		fragment.createEl("a", {
+			text: "Supported date format tokens",
+			href: SETTINGS_LINKS.formatTokenDocs,
+		});
 
 		return fragment;
 	}
 
 	private createNonTypingDescription() {
-		const fragment = document.createDocumentFragment();
-		const link = document.createElement("a");
+		const fragment = createFragment();
 
-		link.href = SETTINGS_LINKS.nonTypingEditingDocs;
-		link.textContent = "How to calculate yours?";
-		fragment.append(
+		fragment.appendText(
 			"The portion of time you are not typing when editing a note. Works best with custom frontmatter handling solution. ",
 		);
-		fragment.append(link);
+		fragment.createEl("a", {
+			text: "How to calculate yours?",
+			href: SETTINGS_LINKS.nonTypingEditingDocs,
+		});
 
 		return fragment;
 	}

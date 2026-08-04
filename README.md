@@ -18,11 +18,11 @@ Show clock in status bar. Sync modified file property with frontmatter.
   migrate automatically (a minimum of 100 ms is now enforced).
 - Requires Obsidian 1.5.7 or newer.
 
-![Obsidian_vH8xXX5e7Z](https://github.com/DynamicPlayerSector/timethings/assets/65742767/67edb231-1149-4896-a0f1-6cfa2aec3d93)
+![Most edited notes view](docs/images/most-edited-view.gif)
 
 ## Clock
 
-![image](https://github.com/DynamicPlayerSector/timethings/assets/65742767/c2b4c4e0-002b-43ea-8b94-6860d6f7c703)
+![Clock in the status bar](docs/images/clock-status-bar.png)
 
 - Option to change the date format. Recommended: `HH:mm:ss` and `hh:mm A`.
 - Option to change update interval.
