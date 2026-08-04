@@ -15,6 +15,10 @@ describe("normalizeUpdateInterval", () => {
 });
 
 describe("migrateSettings", () => {
+	it("enables creation of missing frontmatter properties by default", () => {
+		expect(migrateSettings({}).settings.createMissingFrontmatterProperties).toBe(true);
+	});
+
 	it.each([
 		[true, true],
 		[false, false],

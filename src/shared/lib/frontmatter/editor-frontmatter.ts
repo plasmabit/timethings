@@ -3,6 +3,7 @@ import { Editor } from "obsidian";
 
 interface SetFrontmatterFieldValueOptions {
 	addToHistory?: boolean;
+	createIfMissing?: boolean;
 }
 
 interface EditorViewLike {
@@ -111,6 +112,9 @@ export function setFrontmatterFieldValue(
 	const fieldLine = findFrontmatterFieldLine(editor, fieldPath);
 
 	if (fieldLine === undefined) {
+		if (options.createIfMissing === true) {
+			insertFrontmatterFieldValue(editor, fieldPath, fieldValue, options);
+		}
 		return;
 	}
 
@@ -126,6 +130,128 @@ export function setFrontmatterFieldValue(
 	}
 
 	editor.setLine(fieldLine, nextLine);
+}
+
+function insertFrontmatterFieldValue(
+	editor: Editor,
+	fieldPath: string,
+	fieldValue: string,
+	options: SetFrontmatterFieldValueOptions,
+) {
+	const keys = fieldPath.split(".").filter((key) => key.length > 0);
+	if (keys.length === 0) {
+		return;
+	}
+
+	const endLine = findFrontmatterEndLine(editor);
+	if (endLine === undefined) {
+		if (editor.getLine(0) === "---") {
+			return;
+		}
+
+		const fieldLines = buildNestedFieldLines(keys, fieldValue, "");
+		insertEditorText(editor, 0, `---\n${fieldLines.join("\n")}\n---\n`, options);
+		return;
+	}
+
+	for (let depth = keys.length - 1; depth > 0; depth -= 1) {
+		const parentPath = keys.slice(0, depth).join(".");
+		const parentLine = findFrontmatterFieldLine(editor, parentPath);
+		if (parentLine === undefined) {
+			continue;
+		}
+
+		if (readFrontmatterFieldValueAtLine(editor, parentLine) !== "") {
+			return;
+		}
+
+		const parentIndent = leadingWhitespace(editor.getLine(parentLine));
+		const childIndent = findChildIndent(editor, parentLine, endLine, parentIndent);
+		const insertionLine = findNestedBlockEnd(editor, parentLine, endLine, parentIndent);
+		const fieldLines = buildNestedFieldLines(
+			keys.slice(depth),
+			fieldValue,
+			parentIndent + childIndent,
+		);
+		insertEditorText(editor, insertionLine, `${fieldLines.join("\n")}\n`, options);
+		return;
+	}
+
+	const fieldLines = buildNestedFieldLines(keys, fieldValue, "");
+	insertEditorText(editor, endLine, `${fieldLines.join("\n")}\n`, options);
+}
+
+function buildNestedFieldLines(keys: string[], value: string, initialIndent: string) {
+	return keys.map((key, index) => {
+		const indent = initialIndent + "  ".repeat(index);
+		return index === keys.length - 1 ? `${indent}${key}: ${value}` : `${indent}${key}:`;
+	});
+}
+
+function findChildIndent(
+	editor: Editor,
+	parentLine: number,
+	endLine: number,
+	parentIndent: string,
+) {
+	for (let lineNumber = parentLine + 1; lineNumber < endLine; lineNumber += 1) {
+		const line = editor.getLine(lineNumber);
+		if (line.trim().length === 0) {
+			continue;
+		}
+
+		const indent = leadingWhitespace(line);
+		if (indent.length <= parentIndent.length) {
+			break;
+		}
+
+		return indent.slice(parentIndent.length);
+	}
+
+	return "  ";
+}
+
+function findNestedBlockEnd(
+	editor: Editor,
+	parentLine: number,
+	endLine: number,
+	parentIndent: string,
+) {
+	for (let lineNumber = parentLine + 1; lineNumber < endLine; lineNumber += 1) {
+		const line = editor.getLine(lineNumber);
+		if (line.trim().length > 0 && leadingWhitespace(line).length <= parentIndent.length) {
+			return lineNumber;
+		}
+	}
+
+	return endLine;
+}
+
+function leadingWhitespace(line: string) {
+	return /^\s*/.exec(line)?.[0] ?? "";
+}
+
+function insertEditorText(
+	editor: Editor,
+	lineNumber: number,
+	text: string,
+	options: SetFrontmatterFieldValueOptions,
+) {
+	if (options.addToHistory === false) {
+		const editorView = getEditorView(editor);
+		if (editorView !== undefined) {
+			editorView.dispatch({
+				changes: {
+					from: editor.posToOffset({ line: lineNumber, ch: 0 }),
+					insert: text,
+				},
+				annotations: [Transaction.addToHistory.of(false)],
+			});
+			return;
+		}
+	}
+
+	editor.replaceRange(text, { line: lineNumber, ch: 0 });
 }
 
 function isLineIndented(line: string): boolean {

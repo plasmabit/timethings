@@ -79,4 +79,44 @@ describe("setFrontmatterFieldValue", () => {
 		setFrontmatterFieldValue(fake as unknown as Editor, "missing", "new");
 		expect(fake.getValue()).toBe("---\nkey: old\n---");
 	});
+
+	it("creates frontmatter and a missing key when requested", () => {
+		const fake = new FakeEditor(["Body"]);
+		setFrontmatterFieldValue(fake as unknown as Editor, "updated_at", "now", {
+			createIfMissing: true,
+		});
+		expect(fake.getValue()).toBe("---\nupdated_at: now\n---\nBody");
+	});
+
+	it("does not modify an unclosed frontmatter block", () => {
+		const fake = new FakeEditor(["---", "title: Draft"]);
+		setFrontmatterFieldValue(fake as unknown as Editor, "updated_at", "now", {
+			createIfMissing: true,
+		});
+		expect(fake.getValue()).toBe("---\ntitle: Draft");
+	});
+
+	it("appends a missing key to existing frontmatter", () => {
+		const fake = new FakeEditor(["---", "title: Note", "---", "Body"]);
+		setFrontmatterFieldValue(fake as unknown as Editor, "updated_at", "now", {
+			createIfMissing: true,
+		});
+		expect(fake.getValue()).toBe("---\ntitle: Note\nupdated_at: now\n---\nBody");
+	});
+
+	it("adds a missing nested key under its existing parent", () => {
+		const fake = new FakeEditor([
+			"---",
+			"timethings:",
+			"  existing: true",
+			"title: Note",
+			"---",
+		]);
+		setFrontmatterFieldValue(fake as unknown as Editor, "timethings.updated_at", "now", {
+			createIfMissing: true,
+		});
+		expect(fake.getValue()).toBe(
+			"---\ntimethings:\n  existing: true\n  updated_at: now\ntitle: Note\n---",
+		);
+	});
 });

@@ -55,6 +55,18 @@ export class MetadataUpdateService {
 		const lineNumber = findFrontmatterFieldLine(editor, settings.modifiedKeyName);
 
 		if (lineNumber === undefined) {
+			if (settings.createMissingFrontmatterProperties) {
+				setFrontmatterFieldValue(
+					editor,
+					settings.modifiedKeyName,
+					formatFrontmatterTimestamp(
+						nowInTimezone(settings.frontmatterTimezone, settings.frontmatterUseUtc),
+						settings.modifiedKeyFormat,
+						settings.frontmatterUseIso,
+					),
+					{ addToHistory: false, createIfMissing: true },
+				);
+			}
 			return;
 		}
 
@@ -95,6 +107,10 @@ export class MetadataUpdateService {
 
 		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
 			const currentValue = getNestedFrontmatterValue(frontmatter, settings.modifiedKeyName);
+			if (currentValue === undefined && !settings.createMissingFrontmatterProperties) {
+				return;
+			}
+
 			const currentTime = nowInTimezone(
 				settings.frontmatterTimezone,
 				settings.frontmatterUseUtc,
@@ -136,11 +152,19 @@ export class MetadataUpdateService {
 		this.allowEditDurationUpdate = false;
 
 		try {
+			let didUpdate = false;
 			await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
 				const currentValue = getNestedFrontmatterValue(
 					frontmatter,
 					this.getSettings().editDurationPath,
 				);
+				if (
+					currentValue === undefined &&
+					!this.getSettings().createMissingFrontmatterProperties
+				) {
+					return;
+				}
+
 				const nextValue =
 					toNumber(currentValue) + COOLDOWN_DURATIONS.frontmatterIncrementSeconds;
 
@@ -149,7 +173,11 @@ export class MetadataUpdateService {
 					this.getSettings().editDurationPath,
 					nextValue,
 				);
+				didUpdate = true;
 			});
+			if (!didUpdate) {
+				return;
+			}
 
 			await delay(
 				COOLDOWN_DURATIONS.frontmatterBaseMilliseconds -
@@ -172,6 +200,12 @@ export class MetadataUpdateService {
 			const lineNumber = findFrontmatterFieldLine(editor, settings.editDurationPath);
 
 			if (lineNumber === undefined) {
+				if (settings.createMissingFrontmatterProperties) {
+					setFrontmatterFieldValue(editor, settings.editDurationPath, "1", {
+						addToHistory: false,
+						createIfMissing: true,
+					});
+				}
 				return;
 			}
 

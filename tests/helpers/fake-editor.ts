@@ -13,6 +13,12 @@ export class FakeEditor {
 		this.lines[n] = text;
 	}
 
+	replaceRange(text: string, from: { line: number; ch: number }): void {
+		const currentLine = this.lines[from.line] ?? "";
+		const replacement = `${currentLine.slice(0, from.ch)}${text}${currentLine.slice(from.ch)}`;
+		this.lines.splice(from.line, 1, ...replacement.split("\n"));
+	}
+
 	getValue(): string {
 		return this.lines.join("\n");
 	}

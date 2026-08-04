@@ -113,6 +113,15 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 
 	private renderFrontmatterSection(containerEl: HTMLElement) {
 		this.createSection(containerEl, "Frontmatter", "Handles timestamp keys in frontmatter.");
+		this.addToggleSetting(
+			containerEl,
+			"Create missing properties",
+			"Create enabled modified timestamp and edit duration properties when they are absent.",
+			this.plugin.settings.createMissingFrontmatterProperties,
+			async (value) => {
+				await this.updateSetting("createMissingFrontmatterProperties", value);
+			},
+		);
 		this.renderModifiedKeySection(containerEl);
 		this.renderEditDurationSection(containerEl);
 		this.renderIgnoreSection(containerEl);

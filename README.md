@@ -31,6 +31,7 @@ Show clock in status bar. Sync modified file property with frontmatter.
 
 ## Modified frontmatter key
 
+- Option to create enabled frontmatter properties when they are missing. Enabled by default and applies to both frontmatter handling modes.
 - Have a key that records the time when you last modified a file.
 - Supports nesting.
 - Option to use a custom timestamp format.
@@ -77,7 +78,7 @@ Custom frontmatter handling solution is disabled by default since Obsidian's str
 ### Reasons to leave custom frontmatter handling solution disabled 
 
 - You are using nested keys in the Time Things settings. Using custom frontmatter handling solution with a nested key may result in the wrong key being updated. This only happens if it comes before the needed key in the frontmatter and has a similar path. For example `x.y.z` will update `x.y.g.z` instead if it meets it first and if it has a value of a format specified in the settings.
-- You are not using templates populated with needed variables to create notes. Using custom frontmatter handling solution works best with templates since it doesn't create a key for you if it doesn't already exist. Also it doesn't update null values or the values of the format different from the one specified in the settings.
+- Existing null values or values in a format different from the configured timestamp format are not updated by the custom solution.
 
 I may improve it further in the future, but for that I feel like I'd have to write a full-blown YAML parser from scratch. For now it covers my own wishes completely and even has some room for limited flexibility, so I will focus on other aspects of the plugin.
 

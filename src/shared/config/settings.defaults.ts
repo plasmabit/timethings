@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	modifiedKeyFormat: DEFAULT_MODIFIED_KEY_FORMAT,
 	frontmatterFormatMigrated: true,
 	frontmatterUseIso: true,
+	createMissingFrontmatterProperties: true,
 	enableModifiedKeyUpdate: true,
 	editDurationPath: "edited_seconds",
 	enableEditDurationKey: true,

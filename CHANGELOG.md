@@ -8,6 +8,7 @@
 - Pick a separate timezone for frontmatter timestamps
 - Override either timezone with UTC
 - Toggle between a preserved custom frontmatter format and ISO 8601
+- Choose whether either frontmatter handling mode creates missing timestamp properties
 - Both default to the system timezone when left blank
 
 ## What was changed

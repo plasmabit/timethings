@@ -15,6 +15,7 @@ export interface TimeThingsSettings {
 	modifiedKeyFormat: string;
 	frontmatterFormatMigrated: boolean;
 	frontmatterUseIso: boolean;
+	createMissingFrontmatterProperties: boolean;
 	enableModifiedKeyUpdate: boolean;
 	updateIntervalFrontmatterMinutes: number;
 	editDurationPath: string;

@@ -133,6 +133,18 @@ describe("updateFileMetadata", () => {
 		},
 	);
 
+	it("does not create a missing modified timestamp when creation is disabled", async () => {
+		const { frontmatter, service } = setup(
+			{},
+			{
+				createMissingFrontmatterProperties: false,
+				enableEditDurationKey: false,
+			},
+		);
+		await service.updateFileMetadata(file());
+		expect(frontmatter).toEqual({});
+	});
+
 	it.each([
 		[50, 60],
 		["50", 60],
@@ -161,9 +173,37 @@ describe("updateFileMetadata", () => {
 		await finishCooldown(third);
 		expect(frontmatter.edited_seconds).toBe(20);
 	});
+
+	it("does not create a missing edit duration when creation is disabled", async () => {
+		const { frontmatter, service } = setup(
+			{},
+			{
+				createMissingFrontmatterProperties: false,
+				enableModifiedKeyUpdate: false,
+			},
+		);
+		await service.updateFileMetadata(file());
+		expect(frontmatter).toEqual({});
+	});
 });
 
 describe("updateEditorMetadata", () => {
+	it("creates both missing properties and frontmatter by default", async () => {
+		const { service } = setup();
+		const fake = new FakeEditor(["Body"]);
+		await service.updateEditorMetadata(file(), fake as unknown as Editor);
+		expect(fake.getValue()).toMatch(
+			/^---\nupdated_at: .+\nedited_seconds: 1\n---\nBody$/,
+		);
+	});
+
+	it("does not create missing editor properties when creation is disabled", async () => {
+		const { service } = setup({}, { createMissingFrontmatterProperties: false });
+		const fake = new FakeEditor(["Body"]);
+		await service.updateEditorMetadata(file(), fake as unknown as Editor);
+		expect(fake.getValue()).toBe("Body");
+	});
+
 	it("increments editor duration by one", async () => {
 		const { service } = setup({}, { enableModifiedKeyUpdate: false });
 		const fake = new FakeEditor(["---", "edited_seconds: 5", "---"]);
