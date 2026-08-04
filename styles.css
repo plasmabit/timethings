@@ -23,6 +23,12 @@ If your plugin does not need CSS, delete this file.
 	text-align: end;
 }
 
+.tt-settings-section.setting-item {
+	display: block;
+	padding: 0;
+	border: 0;
+}
+
 .tt-setting-group.setting-item {
 	display: block;
 }

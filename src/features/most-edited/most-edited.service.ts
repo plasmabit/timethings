@@ -35,7 +35,7 @@ export class MostEditedService {
 			entries.push({ file, editedSeconds });
 		}
 
-		return entries.sort((left, right) => right.editedSeconds - left.editedSeconds);
+		return entries.toSorted((left, right) => right.editedSeconds - left.editedSeconds);
 	}
 
 	getTotalEditedSeconds(entries: readonly MostEditedEntry[]): number {

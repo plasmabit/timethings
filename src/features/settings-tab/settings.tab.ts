@@ -1,4 +1,11 @@
-import { App, Plugin, PluginSettingTab, SearchComponent, Setting } from "obsidian";
+import {
+	App,
+	Plugin,
+	PluginSettingTab,
+	SearchComponent,
+	Setting,
+	type SettingDefinitionItem,
+} from "obsidian";
 import {
 	normalizeUpdateInterval,
 	type TimeThingsSettings,
@@ -23,14 +30,72 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	display(): void {
-		const { containerEl } = this;
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		return [
+			{
+				name: "Handling mode",
+				aliases: ["Use custom frontmatter handling solution"],
+				render: (setting) => {
+					this.renderDefinition(setting, (containerEl) => {
+						this.renderHandlingModeSection(containerEl);
+					});
+				},
+			},
+			{
+				name: "Status bar",
+				aliases: [
+					"Show emoji",
+					"Enable clock",
+					"Clock format",
+					"Clock update interval",
+					"Clock timezone",
+					"Use UTC",
+				],
+				render: (setting) => {
+					this.renderDefinition(setting, (containerEl) => {
+						this.renderStatusBarSection(containerEl);
+					});
+				},
+			},
+			{
+				name: "Frontmatter",
+				aliases: [
+					"Create missing properties",
+					"Enable modified key update",
+					"Modified key name",
+					"Modified key format",
+					"Use ISO 8601",
+					"Frontmatter timezone",
+					"Use UTC",
+					"Interval between updates",
+					"Enable edit duration key",
+					"Edit duration key name",
+					"Non-typing editing time percentage",
+					"Ignored folders",
+					"Ignored files",
+				],
+				render: (setting) => {
+					this.renderDefinition(setting, (containerEl) => {
+						this.renderFrontmatterSection(containerEl);
+					});
+				},
+			},
+			{
+				name: "Danger zone",
+				aliases: ["Reset settings"],
+				render: (setting) => {
+					this.renderDefinition(setting, (containerEl) => {
+						this.renderDangerZoneSection(containerEl);
+					});
+				},
+			},
+		];
+	}
 
-		containerEl.empty();
-		this.renderHandlingModeSection(containerEl);
-		this.renderStatusBarSection(containerEl);
-		this.renderFrontmatterSection(containerEl);
-		this.renderDangerZoneSection(containerEl);
+	private renderDefinition(setting: Setting, render: (containerEl: HTMLElement) => void) {
+		setting.settingEl.empty();
+		setting.settingEl.addClass("tt-settings-section");
+		render(setting.settingEl);
 	}
 
 	private renderHandlingModeSection(containerEl: HTMLElement) {
@@ -255,7 +320,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 					.setTooltip("Reset settings")
 					.onClick(async () => {
 						await this.plugin.resetSettings();
-						this.display();
+						this.update();
 					}),
 			);
 	}
@@ -263,7 +328,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 	private renderIgnoreSection(containerEl: HTMLElement) {
 		this.createSubsectionTitle(containerEl, "Ignored paths");
 		containerEl.createEl("p", {
-			text: "Files and folders listed here will be ignored by metadata updates and the Most edited view.",
+			text: "Files and folders listed here will be ignored by metadata updates and the most edited view.",
 		});
 
 		this.renderPathListSetting(
@@ -437,7 +502,9 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			.setName("Modified key format")
 			.setDesc(this.createFormatTokenLink())
 			.addText((text) => {
-				setFormatDisabled = (disabled) => text.setDisabled(disabled);
+				setFormatDisabled = (disabled) => {
+					text.setDisabled(disabled);
+				};
 				text.setPlaceholder("YYYY-MM-DD[T]HH:mm:ss.SSSZ")
 					.setValue(value)
 					.setDisabled(useIso)
@@ -500,7 +567,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 
 						await onChange(nextValues);
 						searchComponent?.setValue("");
-						this.display();
+						this.update();
 					}),
 			);
 
@@ -508,7 +575,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			new Setting(containerEl).setName(currentValue).addButton((button) =>
 				button.setButtonText("Remove").onClick(async () => {
 					await onChange(currentValues.filter((value) => value !== currentValue));
-					this.display();
+					this.update();
 				}),
 			);
 		}
@@ -533,8 +600,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 					.setValue(value)
 					.onChange(async (newValue) => {
 						await onChange(newValue);
-					})
-					.setDynamicTooltip(),
+					}),
 			);
 	}
 
@@ -547,7 +613,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		await this.plugin.saveSettings();
 
 		if (redisplay) {
-			this.display();
+			this.update();
 		}
 	}
 }

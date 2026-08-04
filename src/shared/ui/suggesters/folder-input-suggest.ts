@@ -1,11 +1,7 @@
-import { App, TAbstractFile, TFolder } from "obsidian";
+import { TAbstractFile, TFolder } from "obsidian";
 import { PathInputSuggest } from "./path-input-suggest";
 
 export class FolderInputSuggest extends PathInputSuggest<TFolder> {
-	constructor(app: App, inputEl: HTMLInputElement) {
-		super(app, inputEl);
-	}
-
 	protected getSuggestions(query: string): TFolder[] {
 		const normalizedQuery = query.toLowerCase();
 

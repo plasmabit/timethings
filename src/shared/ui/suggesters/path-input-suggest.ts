@@ -1,10 +1,6 @@
-import { AbstractInputSuggest, App } from "obsidian";
+import { AbstractInputSuggest } from "obsidian";
 
 export abstract class PathInputSuggest<T> extends AbstractInputSuggest<T> {
-	constructor(app: App, inputEl: HTMLInputElement) {
-		super(app, inputEl);
-	}
-
 	renderSuggestion(value: T, el: HTMLElement): void {
 		el.setText(this.getItemText(value));
 	}

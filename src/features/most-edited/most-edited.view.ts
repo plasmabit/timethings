@@ -93,7 +93,7 @@ export class MostEditedView extends ItemView {
 
 		await targetLeaf.openFile(file);
 		this.app.workspace.setActiveLeaf(targetLeaf, { focus: true });
-		this.app.workspace.revealLeaf(targetLeaf);
+		await this.app.workspace.revealLeaf(targetLeaf);
 	}
 
 	private getTargetLeaf(): WorkspaceLeaf {

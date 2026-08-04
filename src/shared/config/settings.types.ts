@@ -4,7 +4,7 @@ export interface TimeThingsSettings {
 	clockFormat: string;
 	updateIntervalMilliseconds: number;
 	enableClock: boolean;
-	/** @deprecated Use clockTimezone instead. Kept for migration only. */
+	/** Legacy UTC value retained for one-time migration. */
 	isUTC: boolean;
 	timezoneSettingsMigrated: boolean;
 	clockUseUtc: boolean;

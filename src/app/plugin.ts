@@ -96,6 +96,6 @@ export default class TimeThings extends Plugin {
 			});
 		}
 
-		workspace.revealLeaf(leaf);
+		await workspace.revealLeaf(leaf);
 	}
 }

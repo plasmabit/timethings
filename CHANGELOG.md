@@ -9,6 +9,7 @@
 - Override either timezone with UTC
 - Toggle between a preserved custom frontmatter format and ISO 8601
 - Choose whether either frontmatter handling mode creates missing timestamp properties
+- Add searchable settings using Obsidian's declarative settings API
 - Both default to the system timezone when left blank
 
 ## What was changed

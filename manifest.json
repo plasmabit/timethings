@@ -2,7 +2,7 @@
 	"id": "timethings",
 	"name": "Time Things",
 	"version": "2.1.0",
-	"minAppVersion": "1.5.7",
+	"minAppVersion": "1.13.0",
 	"description": "Show clock in the corner. Track total editing time of a note and the last time it was modified.",
 	"author": "Nick Winters",
 	"authorUrl": "https://github.com/plasmabit",

@@ -2,6 +2,7 @@ import { App, Editor, TFile } from "obsidian";
 import { DEFAULT_MODIFIED_KEY_FORMAT, type TimeThingsSettings } from "../../shared/config";
 import {
 	findFrontmatterFieldLine,
+	type FrontmatterObject,
 	readFrontmatterFieldValueAtLine,
 	setFrontmatterFieldValue,
 	getNestedFrontmatterValue,
@@ -105,7 +106,7 @@ export class MetadataUpdateService {
 	private async updateModifiedTimestampInFrontmatter(file: TFile) {
 		const settings = this.getSettings();
 
-		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+		await this.app.fileManager.processFrontMatter(file, (frontmatter: FrontmatterObject) => {
 			const currentValue = getNestedFrontmatterValue(frontmatter, settings.modifiedKeyName);
 			if (currentValue === undefined && !settings.createMissingFrontmatterProperties) {
 				return;
@@ -153,28 +154,31 @@ export class MetadataUpdateService {
 
 		try {
 			let didUpdate = false;
-			await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-				const currentValue = getNestedFrontmatterValue(
-					frontmatter,
-					this.getSettings().editDurationPath,
-				);
-				if (
-					currentValue === undefined &&
-					!this.getSettings().createMissingFrontmatterProperties
-				) {
-					return;
-				}
+			await this.app.fileManager.processFrontMatter(
+				file,
+				(frontmatter: FrontmatterObject) => {
+					const currentValue = getNestedFrontmatterValue(
+						frontmatter,
+						this.getSettings().editDurationPath,
+					);
+					if (
+						currentValue === undefined &&
+						!this.getSettings().createMissingFrontmatterProperties
+					) {
+						return;
+					}
 
-				const nextValue =
-					toNumber(currentValue) + COOLDOWN_DURATIONS.frontmatterIncrementSeconds;
+					const nextValue =
+						toNumber(currentValue) + COOLDOWN_DURATIONS.frontmatterIncrementSeconds;
 
-				setNestedFrontmatterValue(
-					frontmatter,
-					this.getSettings().editDurationPath,
-					nextValue,
-				);
-				didUpdate = true;
-			});
+					setNestedFrontmatterValue(
+						frontmatter,
+						this.getSettings().editDurationPath,
+						nextValue,
+					);
+					didUpdate = true;
+				},
+			);
 			if (!didUpdate) {
 				return;
 			}

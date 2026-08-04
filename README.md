@@ -16,7 +16,7 @@ Show clock in status bar. Sync modified file property with frontmatter.
   `ddd`) are now rendered literally.
 - The clock update interval setting is stored as a number; existing values
   migrate automatically (a minimum of 100 ms is now enforced).
-- Requires Obsidian 1.5.7 or newer.
+- Requires Obsidian 1.13.0 or newer.
 
 ![Most edited notes view](docs/images/most-edited-view.gif)
 
