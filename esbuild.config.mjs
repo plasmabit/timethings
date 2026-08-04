@@ -1,4 +1,5 @@
 import esbuild from "esbuild";
+import { copyFileSync } from "node:fs";
 import process from "process";
 import { builtinModules } from "node:module";
 
@@ -10,6 +11,18 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
+
+const copyPluginAssets = {
+	name: "copy-plugin-assets",
+	setup(build) {
+		build.onEnd((result) => {
+			if (result.errors.length > 0) return;
+
+			copyFileSync("manifest.json", "dist/manifest.json");
+			copyFileSync("styles.css", "dist/styles.css");
+		});
+	},
+};
 
 const context = await esbuild.context({
 	banner: {
@@ -39,6 +52,7 @@ const context = await esbuild.context({
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
 	outdir: "dist",
+	plugins: [copyPluginAssets],
 });
 
 if (prod) {
