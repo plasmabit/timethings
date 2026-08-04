@@ -1,6 +1,6 @@
 {
 	"name": "timethings",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"description": "Show clock in the corner. Track total editing time of a note and the last time it was modified.",
 	"keywords": [
 		"clock",
