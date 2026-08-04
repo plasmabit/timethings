@@ -1,5 +1,7 @@
 import type { TimeThingsSettings } from "./settings.types";
 
+export const DEFAULT_MODIFIED_KEY_FORMAT = "YYYY-MM-DD[T]HH:mm:ss.SSSZ";
+
 export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	useCustomFrontmatterHandlingSolution: false,
 	showEmojiStatusBar: true,
@@ -7,10 +9,15 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	updateIntervalMilliseconds: 1000,
 	enableClock: true,
 	isUTC: false,
+	timezoneSettingsMigrated: true,
+	clockUseUtc: false,
 	clockTimezone: "",
+	frontmatterUseUtc: false,
 	frontmatterTimezone: "",
 	modifiedKeyName: "updated_at",
-	modifiedKeyFormat: "YYYY-MM-DD[T]HH:mm:ss.SSSZ",
+	modifiedKeyFormat: DEFAULT_MODIFIED_KEY_FORMAT,
+	frontmatterFormatMigrated: true,
+	frontmatterUseIso: true,
 	enableModifiedKeyUpdate: true,
 	editDurationPath: "edited_seconds",
 	enableEditDurationKey: true,

@@ -24,6 +24,25 @@ export class App {
 	};
 }
 
+export class AbstractInputSuggest {
+	limit = 100;
+
+	constructor(
+		protected readonly app: App,
+		private readonly inputEl: HTMLInputElement,
+	) {}
+
+	setValue(value: string): void {
+		this.inputEl.value = value;
+	}
+
+	getValue(): string {
+		return this.inputEl.value;
+	}
+
+	close(): void {}
+}
+
 export class Editor {
 	getLine(_line: number): string {
 		return "";

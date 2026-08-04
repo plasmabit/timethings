@@ -4,28 +4,35 @@
 
 - **Frontmatter → Modified timestamp → Frontmatter timezone** — IANA timezone written into `updated_at`. Leave blank for system time.
 
-- Pick a timezone for the status-bar clock
+- Search for a timezone by region or city for the status-bar clock
 - Pick a separate timezone for frontmatter timestamps
+- Override either timezone with UTC
+- Toggle between a preserved custom frontmatter format and ISO 8601
 - Both default to the system timezone when left blank
 
 ## What was changed
 
 | File                                               | Change                                                                                |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `src/timezone.ts`                                  | New module: `formatWithTimezone`, `nowInTimezone`, `listTimeZones`, `isValidTimeZone` |
-| `src/shared/config/settings.types.ts`              | Added `clockTimezone` and `frontmatterTimezone` fields                                |
-| `src/shared/config/settings.defaults.ts`           | Defaults both fields to `""` (system timezone)                                        |
-| `src/app/plugin.ts`                                | Migrates legacy `isUTC: true` → `clockTimezone: "UTC"` on load                        |
-| `src/features/clock/clock-status.service.ts`       | Uses `nowInTimezone` + `formatWithTimezone` instead of `now(isUTC)` + `formatClock`   |
-| `src/features/activity/metadata-update.service.ts` | Uses `formatWithTimezone` + `nowInTimezone` for modified timestamps                   |
-| `src/features/settings-tab/settings.tab.ts`        | Replaces UTC toggle with two timezone dropdowns                                       |
-| `tests/timezone.test.ts`                           | Full test suite for `timezone.ts`                                                     |
+| `src/timezone.ts`                                  | Adds cached timezone validation, ISO formatting, and timezone-aware instants          |
+| `src/shared/config/settings.*`                     | Adds separate timezone and UTC settings plus one-time migration state                 |
+| `src/app/plugin.ts`                                | Migrates legacy `isUTC` into the new clock UTC override once                          |
+| `src/features/clock/clock-status.service.ts`       | Formats the clock and emoji from one timezone-aware instant                           |
+| `src/features/activity/metadata-update.service.ts` | Writes custom or ISO 8601 timestamps in the selected timezone                         |
+| `src/features/settings-tab/settings.tab.ts`        | Adds searchable timezone controls plus UTC and ISO overrides                          |
+| `tests/*.test.ts`                                  | Covers migration, search, UTC precedence, and both metadata update paths              |
 
 
-### Mention:
-You need change the isUTC: true → clockTimezone in data.json: "UTC" migration also happens in memory on load, and persists to data.json on the first save.
+### Migration
+
+Legacy `isUTC` is retained and migrated once. Existing UTC users start with the clock UTC override enabled; other users start on the system timezone.
 
 ```json
 "clockTimezone": "",
-"frontmatterTimezone": ""
+"clockUseUtc": false,
+"frontmatterTimezone": "",
+"frontmatterUseUtc": false,
+"frontmatterUseIso": true,
+"frontmatterFormatMigrated": true,
+"timezoneSettingsMigrated": true
 ```

@@ -3,11 +3,7 @@ import { ActivityService, MetadataUpdateService } from "../features/activity";
 import { ClockStatusService } from "../features/clock";
 import { MostEditedView, VIEW_TYPES } from "../features/most-edited";
 import { TimeThingsSettingsTab } from "../features/settings-tab";
-import {
-	DEFAULT_SETTINGS,
-	normalizeUpdateInterval,
-	type TimeThingsSettings,
-} from "../shared/config";
+import { DEFAULT_SETTINGS, migrateSettings, type TimeThingsSettings } from "../shared/config";
 
 export default class TimeThings extends Plugin {
 	settings: TimeThingsSettings = DEFAULT_SETTINGS;
@@ -28,15 +24,12 @@ export default class TimeThings extends Plugin {
 	onunload() {}
 
 	async loadSettings() {
-		const raw =
-			(await this.loadData()) as Partial<TimeThingsSettings> | null;
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, raw);
-		this.settings.updateIntervalMilliseconds = normalizeUpdateInterval(
-			this.settings.updateIntervalMilliseconds,
-		);
-		// Migrate isUTC: true → clockTimezone: "UTC"
-		if (raw?.isUTC && !raw.clockTimezone) {
-			this.settings.clockTimezone = "UTC";
+		const raw = (await this.loadData()) as Partial<TimeThingsSettings> | null;
+		const migration = migrateSettings(raw);
+		this.settings = migration.settings;
+
+		if (migration.didMigrate) {
+			await this.saveSettings();
 		}
 	}
 
@@ -50,10 +43,7 @@ export default class TimeThings extends Plugin {
 	}
 
 	private initializeServices() {
-		const metadataUpdateService = new MetadataUpdateService(
-			this.app,
-			() => this.settings,
-		);
+		const metadataUpdateService = new MetadataUpdateService(this.app, () => this.settings);
 
 		this.activityService = new ActivityService(this, metadataUpdateService);
 		this.clockStatusService = new ClockStatusService(this);
@@ -92,9 +82,7 @@ export default class TimeThings extends Plugin {
 
 	private async activateMostEditedNotesView() {
 		const { workspace } = this.app;
-		const existingLeaf = workspace.getLeavesOfType(
-			VIEW_TYPES.mostEdited,
-		)[0];
+		const existingLeaf = workspace.getLeavesOfType(VIEW_TYPES.mostEdited)[0];
 		const leaf = existingLeaf ?? workspace.getRightLeaf(false);
 
 		if (!(leaf instanceof WorkspaceLeaf)) {

@@ -7,21 +7,38 @@ If your plugin does not need CSS, delete this file.
 
 */
 
-.tt-title
-{
-    justify-content: space-between;
-    align-items: unset;
+.tt-title {
+	justify-content: space-between;
+	align-items: unset;
 }
 
-.tt-title-content
-{
-    flex-grow: 1;
+.tt-title-content {
+	flex-grow: 1;
 }
 
-.flexblock
-{
-    overflow: hidden;
-    width: 100px;
-    max-height: 1rem;
-    text-align: end;
+.flexblock {
+	overflow: hidden;
+	width: 100px;
+	max-height: 1rem;
+	text-align: end;
+}
+
+.tt-setting-group.setting-item {
+	display: block;
+}
+
+.tt-setting-group > .setting-item {
+	padding: 0;
+	border-top: 0;
+	background: transparent;
+}
+
+.tt-setting-separator {
+	margin: var(--size-4-3) 0;
+	border: 0;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.tt-setting-overridden {
+	opacity: 0.5;
 }

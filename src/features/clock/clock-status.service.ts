@@ -1,6 +1,6 @@
 import type { TimeThingsSettings } from "../../shared/config";
-import { clockEmoji } from "../../shared/lib/datetime";
-import { formatWithTimezone, nowInTimezone } from "../../timezone";
+import { clockEmoji, formatClock } from "../../shared/lib/datetime";
+import { nowInTimezone } from "../../timezone";
 import { STATUS_BAR } from "./clock.constants";
 
 interface ClockStatusHost {
@@ -34,11 +34,11 @@ export class ClockStatusService {
 			return;
 		}
 
-		const currentTime = nowInTimezone(this.host.settings.clockTimezone);
-		const formattedTime = formatWithTimezone(
-			this.host.settings.clockFormat,
+		const currentTime = nowInTimezone(
 			this.host.settings.clockTimezone,
+			this.host.settings.clockUseUtc,
 		);
+		const formattedTime = formatClock(currentTime, this.host.settings.clockFormat);
 		const emoji = clockEmoji(currentTime);
 		const statusText = this.host.settings.showEmojiStatusBar
 			? `${emoji} ${formattedTime}`
