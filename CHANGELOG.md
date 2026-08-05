@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1 — 2026-08-05
+
+- Limit creation of missing properties to files that already have frontmatter.
+
 ## 2026-07-11
 
 - **Frontmatter → Modified timestamp → Frontmatter timezone** — IANA timezone written into `updated_at`. Leave blank for system time.

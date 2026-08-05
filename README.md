@@ -31,7 +31,8 @@ Show clock in status bar. Sync modified file property with frontmatter.
 
 ## Modified frontmatter key
 
-- Option to create enabled frontmatter properties when they are missing. Enabled by default and applies to both frontmatter handling modes.
+- Option to create enabled properties when they are missing from existing frontmatter. Enabled by default and applies to both frontmatter handling modes.
+- Files without frontmatter are left unchanged.
 - Have a key that records the time when you last modified a file.
 - Supports nesting.
 - Option to use a custom timestamp format.

@@ -2,6 +2,7 @@ import { App, Editor, TFile } from "obsidian";
 import { DEFAULT_MODIFIED_KEY_FORMAT, type TimeThingsSettings } from "../../shared/config";
 import {
 	findFrontmatterFieldLine,
+	hasFrontmatter,
 	type FrontmatterObject,
 	readFrontmatterFieldValueAtLine,
 	setFrontmatterFieldValue,
@@ -24,30 +25,51 @@ export class MetadataUpdateService {
 	) {}
 
 	async updateEditorMetadata(file: TFile, editor: Editor) {
-		if (isFileIgnored(file, this.getSettings())) {
+		const settings = this.getSettings();
+		if (isFileIgnored(file, settings)) {
 			return;
 		}
 
-		if (this.getSettings().enableModifiedKeyUpdate) {
+		if (!hasFrontmatter(editor)) {
+			return;
+		}
+
+		if (settings.enableModifiedKeyUpdate) {
 			this.updateModifiedTimestampInEditor(editor);
 		}
 
-		if (this.getSettings().enableEditDurationKey) {
+		if (settings.enableEditDurationKey) {
 			await this.updateEditDurationInEditor(editor);
 		}
 	}
 
 	async updateFileMetadata(file: TFile) {
-		if (isFileIgnored(file, this.getSettings())) {
+		const settings = this.getSettings();
+		if (isFileIgnored(file, settings)) {
 			return;
 		}
 
-		if (this.getSettings().enableModifiedKeyUpdate) {
+		if (!(await this.fileHasFrontmatter(file))) {
+			return;
+		}
+
+		if (settings.enableModifiedKeyUpdate) {
 			await this.updateModifiedTimestampInFrontmatter(file);
 		}
 
-		if (this.getSettings().enableEditDurationKey) {
+		if (settings.enableEditDurationKey) {
 			await this.updateEditDurationInFrontmatter(file);
+		}
+	}
+
+	private async fileHasFrontmatter(file: TFile): Promise<boolean> {
+		try {
+			const lines = (await this.app.vault.cachedRead(file))
+				.replace(/^\uFEFF/, "")
+				.split(/\r?\n/);
+			return lines[0] === "---" && lines.slice(1).includes("---");
+		} catch {
+			return false;
 		}
 	}
 

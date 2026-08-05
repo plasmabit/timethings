@@ -12,20 +12,33 @@ function file(path = "Notes/test.md"): TFile {
 	return result;
 }
 
-function setup(initial: Record<string, unknown> = {}, overrides: Partial<TimeThingsSettings> = {}) {
+interface SetupOptions {
+	fileContent?: string;
+}
+
+function setup(
+	initial: Record<string, unknown> = {},
+	overrides: Partial<TimeThingsSettings> = {},
+	options: SetupOptions = {},
+) {
 	const frontmatter = { ...initial };
 	const settings: TimeThingsSettings = { ...DEFAULT_SETTINGS, ...overrides };
+	const processFrontMatter = vi.fn(
+		async (_file: unknown, callback: (value: Record<string, unknown>) => void) =>
+			callback(frontmatter),
+	);
 	const app = {
 		fileManager: {
-			processFrontMatter: async (
-				_file: unknown,
-				callback: (value: Record<string, unknown>) => void,
-			) => callback(frontmatter),
+			processFrontMatter,
+		},
+		vault: {
+			cachedRead: vi.fn(async () => options.fileContent ?? "---\n---\nBody"),
 		},
 	} as unknown as App;
 
 	return {
 		frontmatter,
+		processFrontMatter,
 		settings,
 		service: new MetadataUpdateService(app, () => settings),
 	};
@@ -54,6 +67,19 @@ describe("updateFileMetadata", () => {
 		);
 		await service.updateFileMetadata(file());
 		expect(frontmatter).toEqual({ edited_seconds: 50 });
+	});
+
+	it("does not create a frontmatter block", async () => {
+		const { frontmatter, processFrontMatter, service } = setup(
+			{},
+			{},
+			{ fileContent: "Body" },
+		);
+
+		await service.updateFileMetadata(file());
+
+		expect(frontmatter).toEqual({});
+		expect(processFrontMatter).not.toHaveBeenCalled();
 	});
 
 	it("updates an old modified timestamp", async () => {
@@ -188,20 +214,45 @@ describe("updateFileMetadata", () => {
 });
 
 describe("updateEditorMetadata", () => {
-	it("creates both missing properties and frontmatter by default", async () => {
+	it("does not create frontmatter", async () => {
 		const { service } = setup();
 		const fake = new FakeEditor(["Body"]);
 		await service.updateEditorMetadata(file(), fake as unknown as Editor);
-		expect(fake.getValue()).toMatch(
-			/^---\nupdated_at: .+\nedited_seconds: 1\n---\nBody$/,
-		);
+		expect(fake.getValue()).toBe("Body");
+	});
+
+	it("adds missing properties only to an existing frontmatter block", async () => {
+		const { service } = setup();
+		const fake = new FakeEditor([
+			"---",
+			"title: Note",
+			"---",
+			"Body",
+			"### Project - Ticket",
+		]);
+
+		await service.updateEditorMetadata(file(), fake as unknown as Editor);
+
+		expect(fake.getValue().match(/^---$/gm)).toHaveLength(2);
+		expect(fake.getValue()).toContain("updated_at:");
+		expect(fake.getValue()).toContain("edited_seconds: 1");
+	});
+
+	it("applies manual ignored folders in custom editor mode", async () => {
+		const { service } = setup({}, { ignoredFolders: ["Notes"] });
+		const source = "---\nedited_seconds: 5\n---\nBody";
+		const fake = new FakeEditor(source.split("\n"));
+
+		await service.updateEditorMetadata(file(), fake as unknown as Editor);
+
+		expect(fake.getValue()).toBe(source);
 	});
 
 	it("does not create missing editor properties when creation is disabled", async () => {
 		const { service } = setup({}, { createMissingFrontmatterProperties: false });
-		const fake = new FakeEditor(["Body"]);
+		const fake = new FakeEditor(["---", "title: Note", "---", "Body"]);
 		await service.updateEditorMetadata(file(), fake as unknown as Editor);
-		expect(fake.getValue()).toBe("Body");
+		expect(fake.getValue()).toBe("---\ntitle: Note\n---\nBody");
 	});
 
 	it("increments editor duration by one", async () => {

@@ -181,7 +181,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		this.addToggleSetting(
 			containerEl,
 			"Create missing properties",
-			"Create enabled modified timestamp and edit duration properties when they are absent.",
+			"Create enabled modified timestamp and edit duration properties when they are absent from existing frontmatter.",
 			this.plugin.settings.createMissingFrontmatterProperties,
 			async (value) => {
 				await this.updateSetting("createMissingFrontmatterProperties", value);
