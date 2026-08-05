@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -22,6 +24,13 @@ jobs:
       - run: pnpm check
       - run: pnpm test
       - run: pnpm build
+      - name: Attest release assets
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            dist/main.js
+            dist/manifest.json
+            dist/styles.css
       - name: Create draft release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -30,4 +39,5 @@ jobs:
           gh release create "$tag" \
             --title "$tag" \
             --draft \
-            dist/main.js manifest.json styles.css
+            --verify-tag \
+            dist/main.js dist/manifest.json dist/styles.css

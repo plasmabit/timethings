@@ -44,6 +44,20 @@ Show clock in status bar. Sync modified file property with frontmatter.
 - Track time spent editing a note
 - Display editing duration of current note in the status bar
 
+## Privacy and security
+
+Time Things does not send vault data or telemetry over the network.
+
+The plugin enumerates Markdown files and folder paths inside the current vault.
+This access is used to build the **Most edited notes** view and to provide file
+and folder suggestions for the ignored-path settings. Note contents are read
+only when Time Things updates the configured frontmatter properties; ignored
+files and folders are excluded from tracking.
+
+Release assets are built from the tagged source by GitHub Actions using the
+committed pnpm lockfile. New releases include GitHub artifact attestations for
+`main.js`, `manifest.json`, and `styles.css`.
+
 ## Format tokens
 
 Clock and custom modified-timestamp formats support the following tokens. Text inside

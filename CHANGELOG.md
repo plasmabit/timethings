@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.2 — 2026-08-05
+
+- Build and attest all release assets in GitHub Actions.
+- Upload the exact `dist` artifacts produced by the release build and verify the release tag.
+- Document why the plugin enumerates vault paths and how it handles vault data.
+
 ## 2.1.1 — 2026-08-05
 
 - Limit creation of missing properties to files that already have frontmatter.
