@@ -4,7 +4,7 @@ Know when your note was was last updated. Track how much time you spent writing.
 
 ![Most edited notes view](docs/images/most-edited-view.gif)
 
-It's for people like me, who like to store as much metadata as possible. It might become useful when you trying to reconstruct a session you've been working on. I also believe that it increases serendipity.
+It's for people like me, who like to store as much metadata as possible. It might become useful when you are trying to reconstruct a session you've been working on. I also believe that it increases serendipity.
 
 ## Last edited timestamp
 
