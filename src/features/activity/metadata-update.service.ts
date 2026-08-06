@@ -55,13 +55,55 @@ export class MetadataUpdateService {
 			return;
 		}
 
-		if (settings.enableModifiedKeyUpdate) {
-			await this.updateModifiedTimestampInFrontmatter(file);
+		const shouldUpdateDuration = settings.enableEditDurationKey && this.allowEditDurationUpdate;
+		if (!settings.enableModifiedKeyUpdate && !shouldUpdateDuration) {
+			return;
 		}
 
-		if (settings.enableEditDurationKey) {
-			await this.updateEditDurationInFrontmatter(file);
+		if (shouldUpdateDuration) {
+			this.allowEditDurationUpdate = false;
 		}
+
+		let didUpdateDuration = false;
+		try {
+			await this.app.fileManager.processFrontMatter(
+				file,
+				(frontmatter: FrontmatterObject) => {
+					if (settings.enableModifiedKeyUpdate) {
+						this.updateModifiedTimestampInFrontmatter(frontmatter, settings);
+					}
+
+					if (shouldUpdateDuration) {
+						didUpdateDuration = this.updateEditDurationInFrontmatter(
+							file,
+							frontmatter,
+							settings,
+						);
+					}
+				},
+			);
+		} catch (error) {
+			if (shouldUpdateDuration) {
+				this.allowEditDurationUpdate = true;
+			}
+			throw error;
+		}
+
+		if (!shouldUpdateDuration) {
+			return;
+		}
+
+		if (!didUpdateDuration) {
+			this.allowEditDurationUpdate = true;
+			return;
+		}
+
+		void delay(
+			COOLDOWN_DURATIONS.frontmatterBaseMilliseconds -
+				settings.nonTypingEditingTimePercentage * 100,
+		).then(() => {
+			this.allowEditDurationUpdate = true;
+		});
 	}
 
 	private async fileHasFrontmatter(file: TFile): Promise<boolean> {
@@ -127,94 +169,59 @@ export class MetadataUpdateService {
 		);
 	}
 
-	private async updateModifiedTimestampInFrontmatter(file: TFile) {
-		const settings = this.getSettings();
-
-		await this.app.fileManager.processFrontMatter(file, (frontmatter: FrontmatterObject) => {
-			const currentValue = getNestedFrontmatterValue(frontmatter, settings.modifiedKeyName);
-			if (currentValue === undefined && !settings.createMissingFrontmatterProperties) {
-				return;
-			}
-
-			const currentTime = nowInTimezone(
-				settings.frontmatterTimezone,
-				settings.frontmatterUseUtc,
-			);
-			const previous =
-				typeof currentValue === "string"
-					? parseTimestampStrict(
-							currentValue,
-							settings.frontmatterUseIso
-								? DEFAULT_MODIFIED_KEY_FORMAT
-								: settings.modifiedKeyFormat,
-						)
-					: undefined;
-
-			if (
-				previous &&
-				isWithinMinutes(previous, currentTime, settings.updateIntervalFrontmatterMinutes)
-			) {
-				return;
-			}
-
-			setNestedFrontmatterValue(
-				frontmatter,
-				settings.modifiedKeyName,
-				formatFrontmatterTimestamp(
-					currentTime,
-					settings.modifiedKeyFormat,
-					settings.frontmatterUseIso,
-				),
-			);
-		});
-	}
-
-	private async updateEditDurationInFrontmatter(file: TFile) {
-		if (!this.allowEditDurationUpdate) {
+	private updateModifiedTimestampInFrontmatter(
+		frontmatter: FrontmatterObject,
+		settings: TimeThingsSettings,
+	) {
+		const currentValue = getNestedFrontmatterValue(frontmatter, settings.modifiedKeyName);
+		if (currentValue === undefined && !settings.createMissingFrontmatterProperties) {
 			return;
 		}
 
-		this.allowEditDurationUpdate = false;
+		const currentTime = nowInTimezone(settings.frontmatterTimezone, settings.frontmatterUseUtc);
+		const previous =
+			typeof currentValue === "string"
+				? parseTimestampStrict(
+						currentValue,
+						settings.frontmatterUseIso
+							? DEFAULT_MODIFIED_KEY_FORMAT
+							: settings.modifiedKeyFormat,
+					)
+				: undefined;
 
-		try {
-			let didUpdate = false;
-			await this.app.fileManager.processFrontMatter(
-				file,
-				(frontmatter: FrontmatterObject) => {
-					const currentValue = getNestedFrontmatterValue(
-						frontmatter,
-						this.getSettings().editDurationPath,
-					);
-					if (
-						currentValue === undefined &&
-						!this.getSettings().createMissingFrontmatterProperties
-					) {
-						return;
-					}
-
-					const nextValue =
-						toNumber(currentValue) + COOLDOWN_DURATIONS.frontmatterIncrementSeconds;
-
-					setNestedFrontmatterValue(
-						frontmatter,
-						this.getSettings().editDurationPath,
-						nextValue,
-					);
-					this.onEditDurationChange?.(file, nextValue);
-					didUpdate = true;
-				},
-			);
-			if (!didUpdate) {
-				return;
-			}
-
-			await delay(
-				COOLDOWN_DURATIONS.frontmatterBaseMilliseconds -
-					this.getSettings().nonTypingEditingTimePercentage * 100,
-			);
-		} finally {
-			this.allowEditDurationUpdate = true;
+		if (
+			previous &&
+			isWithinMinutes(previous, currentTime, settings.updateIntervalFrontmatterMinutes)
+		) {
+			return;
 		}
+
+		setNestedFrontmatterValue(
+			frontmatter,
+			settings.modifiedKeyName,
+			formatFrontmatterTimestamp(
+				currentTime,
+				settings.modifiedKeyFormat,
+				settings.frontmatterUseIso,
+			),
+		);
+	}
+
+	private updateEditDurationInFrontmatter(
+		file: TFile,
+		frontmatter: FrontmatterObject,
+		settings: TimeThingsSettings,
+	): boolean {
+		const currentValue = getNestedFrontmatterValue(frontmatter, settings.editDurationPath);
+		if (currentValue === undefined && !settings.createMissingFrontmatterProperties) {
+			return false;
+		}
+
+		const nextValue = toNumber(currentValue) + COOLDOWN_DURATIONS.frontmatterIncrementSeconds;
+
+		setNestedFrontmatterValue(frontmatter, settings.editDurationPath, nextValue);
+		this.onEditDurationChange?.(file, nextValue);
+		return true;
 	}
 
 	private async updateEditDurationInEditor(file: TFile, editor: Editor) {

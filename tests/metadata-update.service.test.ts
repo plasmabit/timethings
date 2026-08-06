@@ -72,16 +72,31 @@ describe("updateFileMetadata", () => {
 	});
 
 	it("does not create a frontmatter block", async () => {
-		const { frontmatter, processFrontMatter, service } = setup(
-			{},
-			{},
-			{ fileContent: "Body" },
-		);
+		const { frontmatter, processFrontMatter, service } = setup({}, {}, { fileContent: "Body" });
 
 		await service.updateFileMetadata(file());
 
 		expect(frontmatter).toEqual({});
 		expect(processFrontMatter).not.toHaveBeenCalled();
+	});
+
+	it("updates the timestamp and edit duration in one frontmatter write", async () => {
+		const old = formatTimestamp(
+			now(false).subtract({ minutes: 2 }),
+			DEFAULT_SETTINGS.modifiedKeyFormat,
+		);
+		const { frontmatter, processFrontMatter, service } = setup({
+			updated_at: old,
+			edited_seconds: 20,
+		});
+
+		const update = service.updateFileMetadata(file());
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(processFrontMatter).toHaveBeenCalledOnce();
+		expect(frontmatter.updated_at).not.toBe(old);
+		expect(frontmatter.edited_seconds).toBe(30);
+		await finishCooldown(update);
 	});
 
 	it("updates an old modified timestamp", async () => {
@@ -225,13 +240,7 @@ describe("updateEditorMetadata", () => {
 
 	it("adds missing properties only to an existing frontmatter block", async () => {
 		const { service } = setup();
-		const fake = new FakeEditor([
-			"---",
-			"title: Note",
-			"---",
-			"Body",
-			"### Project - Ticket",
-		]);
+		const fake = new FakeEditor(["---", "title: Note", "---", "Body", "### Project - Ticket"]);
 
 		await service.updateEditorMetadata(file(), fake as unknown as Editor);
 
@@ -258,10 +267,7 @@ describe("updateEditorMetadata", () => {
 	});
 
 	it("increments editor duration by one", async () => {
-		const { onEditDurationChange, service } = setup(
-			{},
-			{ enableModifiedKeyUpdate: false },
-		);
+		const { onEditDurationChange, service } = setup({}, { enableModifiedKeyUpdate: false });
 		const activeFile = file();
 		const fake = new FakeEditor(["---", "edited_seconds: 5", "---"]);
 		const update = service.updateEditorMetadata(activeFile, fake as unknown as Editor);

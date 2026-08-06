@@ -3,6 +3,7 @@ export const COOLDOWN_DURATIONS = {
 	editorBaseMilliseconds: 1000,
 	frontmatterIncrementSeconds: 10,
 	frontmatterBaseMilliseconds: 10000,
+	frontmatterWriteDelayMilliseconds: 3000,
 } as const;
 
 export const IGNORED_EDITOR_KEYS: readonly string[] = [

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Delay native frontmatter writes until editing settles and batch metadata changes into one update, preventing repeated external-change merge notifications.
 - Restore the active note's edit duration in the status bar.
 - Add settings to toggle the duration item and customize its display template.
 

@@ -23,7 +23,9 @@ export default class TimeThings extends Plugin {
 		this.addSettingTab(new TimeThingsSettingsTab(this.app, this));
 	}
 
-	onunload() {}
+	onunload() {
+		this.activityService?.unload();
+	}
 
 	async loadSettings() {
 		const raw = (await this.loadData()) as Partial<TimeThingsSettings> | null;

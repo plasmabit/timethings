@@ -1,6 +1,6 @@
 import { App, EventRef, MarkdownView, TFile } from "obsidian";
 import type { TimeThingsSettings } from "../../shared/config";
-import { IGNORED_EDITOR_KEYS } from "./activity.constants";
+import { COOLDOWN_DURATIONS, IGNORED_EDITOR_KEYS } from "./activity.constants";
 import { MetadataUpdateService } from "./metadata-update.service";
 
 interface ActivityServiceHost {
@@ -17,6 +17,8 @@ interface ActivityServiceHost {
 
 export class ActivityService {
 	private readonly handledDocuments = new WeakSet<Document>();
+	private readonly frontmatterUpdateTimers = new Map<string, number>();
+	private readonly frontmatterUpdatesInProgress = new Set<string>();
 
 	constructor(
 		private readonly host: ActivityServiceHost,
@@ -26,6 +28,13 @@ export class ActivityService {
 	registerHandlers() {
 		this.registerEditorActivityHandler();
 		this.registerFrontmatterActivityHandler();
+	}
+
+	unload() {
+		for (const timer of this.frontmatterUpdateTimers.values()) {
+			window.clearTimeout(timer);
+		}
+		this.frontmatterUpdateTimers.clear();
 	}
 
 	private registerEditorActivityHandler() {
@@ -70,6 +79,19 @@ export class ActivityService {
 
 	private registerFrontmatterActivityHandler() {
 		this.host.registerEvent(
+			this.host.app.workspace.on("editor-change", (_editor, info) => {
+				if (
+					this.host.settings.useCustomFrontmatterHandlingSolution ||
+					!(info.file instanceof TFile)
+				) {
+					return;
+				}
+
+				this.scheduleFrontmatterUpdate(info.file);
+			}),
+		);
+
+		this.host.registerEvent(
 			this.host.app.vault.on("modify", (file) => {
 				if (this.host.settings.useCustomFrontmatterHandlingSolution) {
 					return;
@@ -85,9 +107,42 @@ export class ActivityService {
 					return;
 				}
 
-				void this.metadataUpdateService.updateFileMetadata(file);
+				this.scheduleFrontmatterUpdate(file);
 			}),
 		);
+	}
+
+	private scheduleFrontmatterUpdate(file: TFile) {
+		if (this.frontmatterUpdatesInProgress.has(file.path)) {
+			return;
+		}
+
+		const currentTimer = this.frontmatterUpdateTimers.get(file.path);
+		if (currentTimer !== undefined) {
+			window.clearTimeout(currentTimer);
+		}
+
+		const timer = window.setTimeout(() => {
+			this.frontmatterUpdateTimers.delete(file.path);
+			void this.runFrontmatterUpdate(file);
+		}, COOLDOWN_DURATIONS.frontmatterWriteDelayMilliseconds);
+		this.frontmatterUpdateTimers.set(file.path, timer);
+	}
+
+	private async runFrontmatterUpdate(file: TFile) {
+		if (
+			this.host.settings.useCustomFrontmatterHandlingSolution ||
+			this.frontmatterUpdatesInProgress.has(file.path)
+		) {
+			return;
+		}
+
+		this.frontmatterUpdatesInProgress.add(file.path);
+		try {
+			await this.metadataUpdateService.updateFileMetadata(file);
+		} finally {
+			this.frontmatterUpdatesInProgress.delete(file.path);
+		}
 	}
 
 	private shouldIgnoreKeyboardEvent(event: KeyboardEvent) {
