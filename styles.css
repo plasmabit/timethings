@@ -23,26 +23,41 @@ If your plugin does not need CSS, delete this file.
 	text-align: end;
 }
 
-.tt-settings-section.setting-item {
+.tt-settings-section.setting-item,
+.setting-group .tt-settings-section.setting-item {
 	display: block;
 	padding: 0;
 	border: 0;
+}
+
+.setting-group .tt-settings-section.setting-item::before {
+	content: none;
+}
+
+.tt-settings-section > p {
+	padding-inline: var(--setting-items-padding-x, var(--size-4-4));
 }
 
 .tt-setting-group.setting-item {
 	display: block;
 }
 
-.tt-setting-group > .setting-item {
+.tt-setting-group > .setting-item,
+.setting-group .tt-setting-group.setting-item > .setting-item {
 	padding: 0;
-	border-top: 0;
+	border: 0;
 	background: transparent;
 }
 
-.tt-setting-separator {
-	margin: var(--size-4-3) 0;
-	border: 0;
-	border-top: 1px solid var(--background-modifier-border);
+.setting-group .tt-setting-group.setting-item > .setting-item::before {
+	content: none;
+}
+
+.tt-setting-group > .setting-item + .setting-item,
+.setting-group .tt-setting-group.setting-item > .setting-item + .setting-item {
+	margin-top: var(--size-4-3);
+	padding-top: var(--size-4-3);
+	border-top: 1px dashed var(--background-modifier-border);
 }
 
 .tt-setting-overridden {

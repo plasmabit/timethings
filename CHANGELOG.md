@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.3 — 2026-08-06
+
+- Restore the settings layout under Obsidian's current styling so grouped controls align with surrounding rows and use a single dashed internal divider.
+
 ## 2.1.2 — 2026-08-05
 
 - Build and attest all release assets in GitHub Actions.

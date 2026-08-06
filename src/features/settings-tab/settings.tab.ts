@@ -475,8 +475,6 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 
 		applyUtcState(useUtc);
 
-		group.createEl("hr", { cls: "tt-setting-separator" });
-
 		new Setting(group)
 			.setName("Use UTC")
 			.setDesc("Overrides the selected timezone.")
@@ -518,8 +516,6 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 		};
 
 		applyIsoState(useIso);
-
-		group.createEl("hr", { cls: "tt-setting-separator" });
 
 		new Setting(group)
 			.setName("Use ISO 8601")
