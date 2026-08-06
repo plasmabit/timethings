@@ -21,6 +21,12 @@ It might be useful for gauging a maturity or relevancy of a note.
 
 Time Things calculates how long you've been working on a note and stores it inside the frontmatter.
 
+The active note's total is also shown in the status bar as `⌛ 12 m`. You can disable
+this item or customize its template in **Settings → Time Things → Status bar**. For
+example, `⌛ {hours}h {minutesPart}m` displays total hours plus the remaining minutes.
+The available tokens are `{duration}`, `{days}`, `{hours}`, `{minutes}`, `{seconds}`,
+`{hoursPart}`, `{minutesPart}`, and `{secondsPart}`.
+
 It might be useful for gauging an effort level you have put into any given note. You might surprise yourself with how much time you spent writing a TV show essay that never seen the light of day.
 
 ## Clock

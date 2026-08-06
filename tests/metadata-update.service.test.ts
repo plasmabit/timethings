@@ -35,12 +35,14 @@ function setup(
 			cachedRead: vi.fn(async () => options.fileContent ?? "---\n---\nBody"),
 		},
 	} as unknown as App;
+	const onEditDurationChange = vi.fn();
 
 	return {
 		frontmatter,
+		onEditDurationChange,
 		processFrontMatter,
 		settings,
-		service: new MetadataUpdateService(app, () => settings),
+		service: new MetadataUpdateService(app, () => settings, onEditDurationChange),
 	};
 }
 
@@ -256,11 +258,16 @@ describe("updateEditorMetadata", () => {
 	});
 
 	it("increments editor duration by one", async () => {
-		const { service } = setup({}, { enableModifiedKeyUpdate: false });
+		const { onEditDurationChange, service } = setup(
+			{},
+			{ enableModifiedKeyUpdate: false },
+		);
+		const activeFile = file();
 		const fake = new FakeEditor(["---", "edited_seconds: 5", "---"]);
-		const update = service.updateEditorMetadata(file(), fake as unknown as Editor);
+		const update = service.updateEditorMetadata(activeFile, fake as unknown as Editor);
 		await finishCooldown(update, 1000);
 		expect(fake.getValue()).toContain("edited_seconds: 6");
+		expect(onEditDurationChange).toHaveBeenCalledWith(activeFile, 6);
 	});
 
 	it("updates a strictly valid modified timestamp", async () => {

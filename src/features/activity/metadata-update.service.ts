@@ -15,6 +15,7 @@ import { formatFrontmatterTimestamp, nowInTimezone } from "../../timezone";
 import { COOLDOWN_DURATIONS } from "./activity.constants";
 
 type SettingsAccessor = () => TimeThingsSettings;
+type EditDurationListener = (file: TFile, totalSeconds: number) => void;
 
 export class MetadataUpdateService {
 	private allowEditDurationUpdate = true;
@@ -22,6 +23,7 @@ export class MetadataUpdateService {
 	constructor(
 		private readonly app: App,
 		private readonly getSettings: SettingsAccessor,
+		private readonly onEditDurationChange?: EditDurationListener,
 	) {}
 
 	async updateEditorMetadata(file: TFile, editor: Editor) {
@@ -39,7 +41,7 @@ export class MetadataUpdateService {
 		}
 
 		if (settings.enableEditDurationKey) {
-			await this.updateEditDurationInEditor(editor);
+			await this.updateEditDurationInEditor(file, editor);
 		}
 	}
 
@@ -198,6 +200,7 @@ export class MetadataUpdateService {
 						this.getSettings().editDurationPath,
 						nextValue,
 					);
+					this.onEditDurationChange?.(file, nextValue);
 					didUpdate = true;
 				},
 			);
@@ -214,7 +217,7 @@ export class MetadataUpdateService {
 		}
 	}
 
-	private async updateEditDurationInEditor(editor: Editor) {
+	private async updateEditDurationInEditor(file: TFile, editor: Editor) {
 		if (!this.allowEditDurationUpdate) {
 			return;
 		}
@@ -231,6 +234,7 @@ export class MetadataUpdateService {
 						addToHistory: false,
 						createIfMissing: true,
 					});
+					this.onEditDurationChange?.(file, 1);
 				}
 				return;
 			}
@@ -241,6 +245,7 @@ export class MetadataUpdateService {
 			setFrontmatterFieldValue(editor, settings.editDurationPath, nextValue.toString(), {
 				addToHistory: false,
 			});
+			this.onEditDurationChange?.(file, nextValue);
 
 			await delay(
 				COOLDOWN_DURATIONS.editorBaseMilliseconds -

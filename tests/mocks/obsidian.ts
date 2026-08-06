@@ -24,6 +24,11 @@ export class App {
 	};
 }
 
+export class MarkdownView {
+	file: TFile | null = null;
+	editor!: Editor;
+}
+
 export class AbstractInputSuggest {
 	limit = 100;
 

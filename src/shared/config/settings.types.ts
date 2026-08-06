@@ -20,6 +20,8 @@ export interface TimeThingsSettings {
 	updateIntervalFrontmatterMinutes: number;
 	editDurationPath: string;
 	enableEditDurationKey: boolean;
+	showEditDurationStatusBar: boolean;
+	editDurationStatusBarFormat: string;
 	nonTypingEditingTimePercentage: number;
 	ignoredFolders: string[];
 	ignoredFiles: string[];
@@ -29,4 +31,5 @@ export interface TimeThingsSettingsManager {
 	settings: TimeThingsSettings;
 	saveSettings(): Promise<void>;
 	resetSettings(): Promise<void>;
+	refreshEditDurationStatusBar(): void;
 }

@@ -5,6 +5,7 @@ import {
 	formatClock,
 	formatDateTime,
 	formatDurationHoursMinutes,
+	formatDurationTemplate,
 	parseDateTimeStrict,
 	normalizeClockFormat,
 } from "../src/shared/lib/datetime";
@@ -77,4 +78,21 @@ describe("duration formatting", () => {
 			expect(formatDurationHoursMinutes(seconds)).toBe(expected);
 		},
 	);
+
+	it("formats status-bar duration templates", () => {
+		expect(
+			formatDurationTemplate(
+				90_061,
+				"{days}d {hoursPart}h {minutesPart}m {secondsPart}s / {minutes} minutes",
+			),
+		).toBe("1d 1h 1m 1s / 1501 minutes");
+	});
+
+	it("preserves the legacy less-than-one-minute display", () => {
+		expect(formatDurationTemplate(42, "⌛ {minutes} m")).toBe("⌛ <1 m");
+	});
+
+	it("leaves unknown template tokens untouched", () => {
+		expect(formatDurationTemplate(60, "{minutes} {unknown}")).toBe("1 {unknown}");
+	});
 });

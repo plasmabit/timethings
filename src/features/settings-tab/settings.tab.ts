@@ -50,6 +50,8 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 					"Clock update interval",
 					"Clock timezone",
 					"Use UTC",
+					"Show edit duration",
+					"Edit duration format",
 				],
 				render: (setting) => {
 					this.renderDefinition(setting, (containerEl) => {
@@ -111,8 +113,12 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 	}
 
 	private renderStatusBarSection(containerEl: HTMLElement) {
-		this.createSection(containerEl, "Status bar", "Displays clock in the status bar");
-		this.createSubsectionTitle(containerEl, "🕰️ Clock");
+		this.createSection(
+			containerEl,
+			"Status bar",
+			"Displays time information in the status bar",
+		);
+		this.createSubsectionTitle(containerEl, "Clock");
 
 		this.addToggleSetting(
 			containerEl,
@@ -174,6 +180,32 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 				},
 			);
 		}
+
+		this.createSubsectionTitle(containerEl, "Edit duration");
+		this.addToggleSetting(
+			containerEl,
+			"Show edit duration",
+			"Show the active note's tracked editing time in the status bar. Requires edit duration tracking.",
+			this.plugin.settings.showEditDurationStatusBar,
+			async (value) => {
+				await this.updateSetting("showEditDurationStatusBar", value, true);
+				this.plugin.refreshEditDurationStatusBar();
+			},
+		);
+
+		if (this.plugin.settings.showEditDurationStatusBar) {
+			this.addTextSetting(
+				containerEl,
+				"Edit duration format",
+				this.createEditDurationFormatDescription(),
+				"⌛ {minutes} m",
+				this.plugin.settings.editDurationStatusBarFormat,
+				async (value) => {
+					await this.updateSetting("editDurationStatusBarFormat", value);
+					this.plugin.refreshEditDurationStatusBar();
+				},
+			);
+		}
 	}
 
 	private renderFrontmatterSection(containerEl: HTMLElement) {
@@ -193,7 +225,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 	}
 
 	private renderModifiedKeySection(containerEl: HTMLElement) {
-		this.createSubsectionTitle(containerEl, "🔑 Modified timestamp");
+		this.createSubsectionTitle(containerEl, "Modified timestamp");
 
 		this.addToggleSetting(
 			containerEl,
@@ -263,7 +295,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 	}
 
 	private renderEditDurationSection(containerEl: HTMLElement) {
-		this.createSubsectionTitle(containerEl, "🔑 Edited duration");
+		this.createSubsectionTitle(containerEl, "Edited duration");
 		containerEl.createEl("p", {
 			text: "Track for how long you have been editing a note.",
 		});
@@ -275,6 +307,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			this.plugin.settings.enableEditDurationKey,
 			async (value) => {
 				await this.updateSetting("enableEditDurationKey", value, true);
+				this.plugin.refreshEditDurationStatusBar();
 			},
 		);
 
@@ -290,6 +323,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			this.plugin.settings.editDurationPath,
 			async (value) => {
 				await this.updateSetting("editDurationPath", value);
+				this.plugin.refreshEditDurationStatusBar();
 			},
 		);
 
@@ -308,7 +342,7 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 	}
 
 	private renderDangerZoneSection(containerEl: HTMLElement) {
-		this.createSection(containerEl, "Danger zone", "You've been warned!");
+		this.createSection(containerEl, "💀⚡ Danger zone", "You've been warned!");
 
 		new Setting(containerEl)
 			.setName("Reset settings")
@@ -390,6 +424,16 @@ export class TimeThingsSettingsTab extends PluginSettingTab {
 			text: "How to calculate yours?",
 			href: SETTINGS_LINKS.nonTypingEditingDocs,
 		});
+
+		return fragment;
+	}
+
+	private createEditDurationFormatDescription() {
+		const fragment = createFragment();
+
+		fragment.appendText(
+			"Use {duration} for a compact value. {days}, {hours}, {minutes}, and {seconds} are totals; {hoursPart}, {minutesPart}, and {secondsPart} are remainder components.",
+		);
 
 		return fragment;
 	}

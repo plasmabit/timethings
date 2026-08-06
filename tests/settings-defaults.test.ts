@@ -15,6 +15,13 @@ describe("normalizeUpdateInterval", () => {
 });
 
 describe("migrateSettings", () => {
+	it("restores the edit duration status bar for existing installations", () => {
+		const settings = migrateSettings({}).settings;
+
+		expect(settings.showEditDurationStatusBar).toBe(true);
+		expect(settings.editDurationStatusBarFormat).toBe("⌛ {minutes} m");
+	});
+
 	it("enables creation of missing frontmatter properties by default", () => {
 		expect(migrateSettings({}).settings.createMissingFrontmatterProperties).toBe(true);
 	});

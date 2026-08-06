@@ -1,6 +1,7 @@
 import type { TimeThingsSettings } from "./settings.types";
 
 export const DEFAULT_MODIFIED_KEY_FORMAT = "YYYY-MM-DD[T]HH:mm:ss.SSSZ";
+export const DEFAULT_EDIT_DURATION_STATUS_FORMAT = "⌛ {minutes} m";
 
 export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	useCustomFrontmatterHandlingSolution: false,
@@ -22,6 +23,8 @@ export const DEFAULT_SETTINGS: TimeThingsSettings = {
 	enableModifiedKeyUpdate: true,
 	editDurationPath: "edited_seconds",
 	enableEditDurationKey: true,
+	showEditDurationStatusBar: true,
+	editDurationStatusBarFormat: DEFAULT_EDIT_DURATION_STATUS_FORMAT,
 	updateIntervalFrontmatterMinutes: 1,
 	nonTypingEditingTimePercentage: 22,
 	ignoredFolders: [],

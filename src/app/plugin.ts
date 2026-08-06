@@ -1,6 +1,7 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
 import { ActivityService, MetadataUpdateService } from "../features/activity";
 import { ClockStatusService } from "../features/clock";
+import { EditDurationStatusService } from "../features/edit-duration-status";
 import { MostEditedView, VIEW_TYPES } from "../features/most-edited";
 import { TimeThingsSettingsTab } from "../features/settings-tab";
 import { DEFAULT_SETTINGS, migrateSettings, type TimeThingsSettings } from "../shared/config";
@@ -9,6 +10,7 @@ export default class TimeThings extends Plugin {
 	settings: TimeThingsSettings = DEFAULT_SETTINGS;
 	private activityService?: ActivityService;
 	private clockStatusService?: ClockStatusService;
+	private editDurationStatusService?: EditDurationStatusService;
 
 	async onload() {
 		await this.loadSettings();
@@ -40,10 +42,22 @@ export default class TimeThings extends Plugin {
 	async resetSettings() {
 		this.settings = { ...DEFAULT_SETTINGS };
 		await this.saveSettings();
+		this.refreshEditDurationStatusBar();
+	}
+
+	refreshEditDurationStatusBar() {
+		this.editDurationStatusService?.refresh();
 	}
 
 	private initializeServices() {
-		const metadataUpdateService = new MetadataUpdateService(this.app, () => this.settings);
+		this.editDurationStatusService = new EditDurationStatusService(this);
+		const metadataUpdateService = new MetadataUpdateService(
+			this.app,
+			() => this.settings,
+			(file, totalSeconds) => {
+				this.editDurationStatusService?.renderFileDuration(file, totalSeconds);
+			},
+		);
 
 		this.activityService = new ActivityService(this, metadataUpdateService);
 		this.clockStatusService = new ClockStatusService(this);
@@ -74,6 +88,7 @@ export default class TimeThings extends Plugin {
 
 	private initializeStatusBar() {
 		this.clockStatusService?.initialize();
+		this.editDurationStatusService?.initialize();
 	}
 
 	private registerActivityHandlers() {

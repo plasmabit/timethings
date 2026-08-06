@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Restore the active note's edit duration in the status bar.
+- Add settings to toggle the duration item and customize its display template.
+
 ## 2.1.3 — 2026-08-06
 
 - Restore the settings layout under Obsidian's current styling so grouped controls align with surrounding rows and use a single dashed internal divider.
