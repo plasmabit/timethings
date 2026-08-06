@@ -1,6 +1,6 @@
 # Time Things
 
-Know when your note was created, and updated. Track for how much time you spend writing. Keep an eye on the clock.
+Know when your note was was last updated. Track how much time you spent writing. Keep an eye on the clock.
 
 ![Most edited notes view](docs/images/most-edited-view.gif)
 
