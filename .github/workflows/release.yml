@@ -24,6 +24,8 @@ jobs:
       - run: pnpm check
       - run: pnpm test
       - run: pnpm build
+      - name: Verify release bundle matches the conventional build output
+        run: cmp main.js dist/main.js
       - name: Attest release assets
         uses: actions/attest@v4
         with:

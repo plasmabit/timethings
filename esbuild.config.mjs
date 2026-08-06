@@ -1,5 +1,5 @@
 import esbuild from "esbuild";
-import { copyFileSync } from "node:fs";
+import { copyFileSync, mkdirSync } from "node:fs";
 import process from "process";
 import { builtinModules } from "node:module";
 
@@ -17,6 +17,8 @@ const copyPluginAssets = {
 		build.onEnd((result) => {
 			if (result.errors.length > 0) return;
 
+			mkdirSync("dist", { recursive: true });
+			copyFileSync("main.js", "dist/main.js");
 			copyFileSync("manifest.json", "dist/manifest.json");
 			copyFileSync("styles.css", "dist/styles.css");
 		});
@@ -51,7 +53,7 @@ const context = await esbuild.context({
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	outdir: "dist",
+	outfile: "main.js",
 	plugins: [copyPluginAssets],
 });
 

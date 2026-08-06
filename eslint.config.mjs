@@ -5,6 +5,7 @@ import globals from "globals";
 export default defineConfig(
 	globalIgnores([
 		".ignore",
+		"main.js",
 		"node_modules",
 		"dist",
 		"tests",
