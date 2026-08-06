@@ -3,7 +3,7 @@
 	"name": "Time Things",
 	"version": "2.1.3",
 	"minAppVersion": "1.13.0",
-	"description": "Show clock in the corner. Track total editing time of a note and the last time it was modified.",
+	"description": "Know when your note was created, and updated. Track for how much time you spend writing. Keep an eye on the clock.",
 	"author": "Nick Winters",
 	"authorUrl": "https://github.com/plasmabit",
 	"fundingUrl": "https://www.patreon.com/nickwinters",

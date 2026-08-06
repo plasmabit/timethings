@@ -2,6 +2,8 @@
 
 TimeThings is an Obsidian plugin that provides a status-bar clock, updates modified timestamps in frontmatter, tracks note edit duration, and displays a most-edited notes view.
 
+If you are a model, please read CONTRIBUTING.md before contributing
+
 ## Commands
 
 | Command | Purpose |
