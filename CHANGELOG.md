@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.1.5 — 2026-08-07
+
+- Make production bundles reproducible across package-manager layouts by minifying generated output.
+- Pin direct dependencies and declare the supported Node.js build range.
+- Verify in CI that clean npm and pnpm installs produce byte-identical `main.js` bundles.
+
 ## 2.1.4 — 2026-08-07
 
 - Delay native frontmatter writes until editing settles and batch metadata changes into one update, preventing repeated external-change merge notifications.

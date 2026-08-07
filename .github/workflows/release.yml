@@ -24,8 +24,22 @@ jobs:
       - run: pnpm check
       - run: pnpm test
       - run: pnpm build
-      - name: Verify release bundle matches the conventional build output
+      - name: Verify the release copy matches the production build output
         run: cmp main.js dist/main.js
+      - name: Verify the bundle is reproducible with a clean npm install
+        shell: bash
+        run: |
+          expected="$(sha256sum main.js | cut -d ' ' -f 1)"
+          audit_dir="$(mktemp -d)"
+          trap 'rm -rf "$audit_dir"' EXIT
+          git archive HEAD | tar -x -C "$audit_dir"
+          (
+            cd "$audit_dir"
+            npm install --ignore-scripts --no-audit --no-fund
+            npm run build
+            actual="$(sha256sum main.js | cut -d ' ' -f 1)"
+            test "$actual" = "$expected"
+          )
       - name: Attest release assets
         uses: actions/attest@v4
         with:

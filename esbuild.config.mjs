@@ -50,6 +50,7 @@ const context = await esbuild.context({
 	],
 	format: "cjs",
 	target: "es2022",
+	minify: prod,
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
